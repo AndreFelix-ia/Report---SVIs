@@ -6,33 +6,39 @@
 <title>Painel SVI · Inspeções</title>
 
 <script>
+/* ============================================================
+   CARREGAMENTO DAS BIBLIOTECAS
+   Ordem: LOCAL primeiro (lib/) — sem dependência externa.
+   CDN apenas como contingência se o arquivo local faltar.
+   ============================================================ */
 window.__XLSX_OK = false;
 window.__HTML2CANVAS_OK = false;
 window.ESQUEMA = 'https' + '://';
 (function(){
   var s = window.ESQUEMA;
   var FONTES_XLSX = [
+    'lib/xlsx.full.min.js',
     s + 'cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
-    s + 'cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
-    s + 'unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+    s + 'cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
   ];
   var FONTES_CANVAS = [
+    'lib/html2canvas.min.js',
     s + 'cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
     s + 'cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
   ];
   function tentar(fontes, nome, chave){
     if(!fontes.length){
-      console.error('❌ ' + nome + ' nao carregado: nenhum CDN respondeu.');
+      console.error('❌ ' + nome + ' nao carregado: nenhuma fonte respondeu.');
       return;
     }
     var sc = document.createElement('script');
     sc.src = fontes[0];
     sc.onload = function(){
       window[chave] = true;
-      console.log('✅ Biblioteca ' + nome + ' carregada');
+      console.log('✅ Biblioteca ' + nome + ' carregada de ' + fontes[0]);
     };
     sc.onerror = function(){
-      console.warn('⚠️ CDN falhou para ' + nome + '. Tentando proxima fonte...');
+      console.warn('⚠️ Falha ao carregar ' + nome + ' de ' + fontes[0] + '. Tentando proxima fonte...');
       tentar(fontes.slice(1), nome, chave);
     };
     document.head.appendChild(sc);
@@ -251,7 +257,7 @@ body.modo-sup .hero-status{min-width:320px}
         <div class="ts">Acompanhamento operacional de metas</div>
       </div>
     </div>
-    <div class="hmeta"><span id="fileInfo">Nenhum arquivo carregado</span></div>
+    <div class="hmeta"><span id="fileInfo">Carregando dados automaticamente...</span></div>
     <div class="header-actions no-print">
       <button class="btn btn-laranja" onclick="document.getElementById('fileInput').click()">📁 Carregar planilha</button>
       <button class="btn btn-branco" onclick="toggleSup()">📱 Modo Supervisor</button>
@@ -267,8 +273,8 @@ body.modo-sup .hero-status{min-width:320px}
 
 <main>
   <div id="vazio">
-    <h3 style="margin-bottom:6px">Carregue a planilha de inspeções</h3>
-    <p style="font-size:.84rem;color:var(--mut)">A planilha em dados/inspecoes.xlsx é carregada automaticamente. Você também pode arrastar ou usar o botão Carregar planilha.</p>
+    <h3 style="margin-bottom:6px">Carregando o painel automaticamente...</h3>
+    <p style="font-size:.84rem;color:var(--mut)">Lendo dados/inspecoes.xlsx e dados/configuracao.json. Se o carregamento automático não acontecer, use o botão Carregar planilha ou arraste o arquivo aqui.</p>
     <div id="drop">📥 Solte o arquivo Excel aqui</div>
   </div>
 
@@ -344,13 +350,10 @@ body.modo-sup .hero-status{min-width:320px}
    CONFIG: edite aqui. Única parte que você mantém.
    ============================================================ */
 var CONFIG = {
-  /* Planilha mensal: basta substituir o arquivo em dados/inspecoes.xlsx */
   excelUrl: 'dados/inspecoes.xlsx',
-
-  /* Arquivo de configuração: edite as férias em dados/configuracao.json */
   configUrl: 'dados/configuracao.json',
 
-  /* Férias (FALLBACK apenas se configuracao.json não carregar).
+  /* Férias (FALLBACK apenas se dados/configuracao.json não carregar).
      A fonte oficial é o arquivo dados/configuracao.json.
      Nomes em MAIÚSCULA, valem para supervisores E técnicos. */
   ferias: [
@@ -419,7 +422,7 @@ function getCell(ws,r,c){ return ws[XLSX.utils.encode_cell({r:r,c:c})]; }
 function xlsxPronto(){
   if(typeof XLSX==='undefined'){
     console.error('❌ XLSX não carregado');
-    alert('Biblioteca XLSX não foi carregada. Verifique a conexão ou o bloqueio de rede.');
+    alert('Biblioteca XLSX não foi carregada. Verifique se o arquivo lib/xlsx.full.min.js existe na pasta do projeto.');
     return false;
   }
   console.log('✅ Biblioteca XLSX carregada (versão '+XLSX.version+')');
