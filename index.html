@@ -58,7 +58,7 @@ window.ESQUEMA = 'https' + '://';
   --sombra:0 1px 2px rgba(16,36,62,.06),0 8px 24px rgba(16,36,62,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--texto);min-height:100vh}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--texto);min-height:100vh;padding-bottom:40px}
 
 header{background:linear-gradient(135deg,#003A70 0%,#005CA9 100%);color:#fff;border-bottom:4px solid #F47920;position:sticky;top:0;z-index:40;box-shadow:0 2px 14px rgba(0,58,112,.28)}
 .hwrap{max-width:1360px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -217,6 +217,9 @@ main{max-width:1360px;margin:0 auto;padding:20px}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--azul-900);color:#fff;padding:10px 18px;border-radius:99px;font-size:.82rem;opacity:0;pointer-events:none;transition:.25s;z-index:80}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
+/* Rodapé discreto do painel */
+.rodape{position:fixed;bottom:10px;right:16px;font-size:.68rem;color:#94A3B8;letter-spacing:.4px;z-index:50;pointer-events:none;background:rgba(238,242,247,.75);padding:3px 9px;border-radius:6px;white-space:nowrap}
+
 @media print{
   .no-print{display:none!important}
   body{background:#fff}
@@ -257,10 +260,9 @@ body.modo-sup .hero-status{min-width:320px}
         <div class="ts">DEOP · Acompanhamento operacional de metas</div>
       </div>
     </div>
-    <div class="hmeta"><span id="fileInfo">Carregando dados automaticamente...</span></div>
+    <div class="hmeta"><span id="fileInfo">DEOP · Carregando dados...</span></div>
     <div class="header-actions no-print">
-      <button class="btn btn-laranja" onclick="document.getElementById('fileInput').click()">📁 Carregar planilha</button>
-      <button class="btn btn-branco" onclick="toggleSup()">📱 Modo Supervisor</button>
+      <button class="btn btn-branco" onclick="toggleSup()">📊 Visão Executiva</button>
       <button class="btn btn-branco" onclick="togglePrint()">📸 Gerar Visual</button>
       <button class="btn btn-branco" onclick="gerarCard(true)">📄 Exportar PNG</button>
       <button class="btn btn-laranja" onclick="gerarCard(false)">📱 Gerar Card</button>
@@ -269,12 +271,12 @@ body.modo-sup .hero-status{min-width:320px}
 </header>
 
 <div id="exitPrint"><span>📸 Modo visual para compartilhamento</span><button class="btn btn-laranja" onclick="togglePrint()">✖ Sair do modo print</button></div>
-<div id="exitSup"><span>📱 Modo Supervisor</span><button class="btn btn-laranja" onclick="toggleSup()">✖ Sair do modo</button></div>
+<div id="exitSup"><span>📊 Visão Executiva da Regional</span><button class="btn btn-laranja" onclick="toggleSup()">✖ Sair do modo</button></div>
 
 <main>
   <div id="vazio">
     <h3 style="margin-bottom:6px">Carregando o painel automaticamente...</h3>
-    <p style="font-size:.84rem;color:var(--mut)">Lendo dados/inspecoes.xlsx e dados/configuracao.json. Se o carregamento automático não acontecer, use o botão Carregar planilha ou arraste o arquivo aqui.</p>
+    <p style="font-size:.84rem;color:var(--mut)">Lendo os arquivos mensais da pasta dados/ (ex.: dados/2026-08.xlsx). Se o carregamento automático não acontecer, arraste o arquivo .xlsx aqui.</p>
     <div id="drop">📥 Solte o arquivo Excel aqui</div>
   </div>
 
@@ -324,6 +326,8 @@ body.modo-sup .hero-status{min-width:320px}
   </div>
 </main>
 
+<footer class="rodape">DEOP | Energisa Sergipe | Elaborado por André Felix</footer>
+
 <div class="modal no-print" id="modal">
   <div class="mpanel">
     <div class="mhead"><h3 id="relTitulo">Relatório</h3><button class="x" onclick="fecharModal()">×</button></div>
@@ -357,8 +361,11 @@ body.modo-sup .hero-status{min-width:320px}
    CONFIG: edite aqui. Única parte que você mantém.
    ============================================================ */
 var CONFIG = {
-  excelUrl: 'dados/inspecoes.xlsx',
   configUrl: 'dados/configuracao.json',
+
+  /* Meses (OPCIONAL). Se declarados em dados/configuracao.json ("meses"),
+     o painel usa esta lista e não faz a varredura automática.
+     Formato: "AAAA-MM". Ex.: ["2026-08","2026-07","2026-06"] */
 
   /* Férias (FALLBACK apenas se dados/configuracao.json não carregar).
      A fonte oficial é o arquivo dados/configuracao.json.
@@ -417,6 +424,7 @@ var CONFIG = {
 
 var S = { records:[], arquivo:'', atualizado:null, filtros:{ regional:'', cargo:'todos', pessoa:'', mes:'', ini:'', fim:'', quinzena:'1', busca:'', periodo:'mensal' } };
 var SUP = [], TEC = [], COORD = [], GER = [], ultimoCardTexto = '', ultimaMsgRelatorio = '';
+var MESES_DISPONIVEIS = [], MES_ATUAL_LOAD = null;
 
 var AVISO_FERIAS_TXT = '⚠️ Atenção\nColaborador registrado em férias.\nO supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores.\nAo término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.';
 var AVISO_FERIAS_HTML = '<div class="aviso"><div class="at">⚠️ Atenção</div><div class="am">Colaborador registrado em férias. O supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div></div>';
@@ -457,7 +465,7 @@ function xlsxPronto(){
   return true;
 }
 
-/* ---------- carregar configuração externa (férias) ---------- */
+/* ---------- carregar configuração externa (férias + meses opcionais) ---------- */
 async function carregarConfig(){
   if(!CONFIG.configUrl){ console.log('ℹ️ configUrl vazio.'); return; }
   console.log('🔎 Carregando configuração de "'+CONFIG.configUrl+'"...');
@@ -472,8 +480,86 @@ async function carregarConfig(){
     } else {
       console.warn('⚠️ configuracao.json sem lista "ferias" válida. Usando fallback local.');
     }
+    if(cfg && Array.isArray(cfg.meses) && cfg.meses.length){
+      CONFIG.meses = cfg.meses.map(function(m){ return String(m); });
+      console.log('📅 Meses declarados na configuração: '+CONFIG.meses.length);
+    }
   }catch(err){
-    console.warn('⚠️ Não foi possível carregar '+CONFIG.configUrl+' ('+err.message+'). Usando lista local (CONFIG.ferias).');
+    console.warn('⚠️ Não foi possível carregar '+CONFIG.configUrl+' ('+err.message+'). Usando fallback local.');
+  }
+}
+
+/* ---------- descoberta dos arquivos mensais ---------- */
+async function mesExiste(mes){
+  try{
+    var r = await fetch('dados/'+mes+'.xlsx', {method:'HEAD', cache:'no-store'});
+    return r.ok;
+  }catch(e){
+    try{
+      var r2 = await fetch('dados/'+mes+'.xlsx', {cache:'no-store'});
+      if(!r2.ok) return false;
+      await r2.arrayBuffer();
+      return true;
+    }catch(e2){ return false; }
+  }
+}
+
+async function descobrirMeses(){
+  var candidatos = [];
+  if(Array.isArray(CONFIG.meses) && CONFIG.meses.length){
+    for(var i=0;i<CONFIG.meses.length;i++) candidatos.push(String(CONFIG.meses[i]));
+  } else {
+    /* Varredura automática: tenta os últimos 24 meses a partir do atual */
+    var d = new Date();
+    for(var k=0;k<24;k++){
+      candidatos.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+      d.setMonth(d.getMonth()-1);
+    }
+  }
+  var vistos = {}, achados = [];
+  for(var j=0;j<candidatos.length;j++){
+    var mes = candidatos[j];
+    if(vistos[mes]) continue;
+    vistos[mes] = true;
+    if(await mesExiste(mes)) achados.push(mes);
+  }
+  achados.sort();
+  achados.reverse(); /* do mais recente para o mais antigo */
+  MESES_DISPONIVEIS = achados;
+  console.log('📅 Meses disponíveis: '+(achados.length?achados.join(', '):'nenhum'));
+}
+
+function preencherSelectMeses(){
+  var sel = document.getElementById('fMes');
+  if(!sel) return;
+  sel.innerHTML = '';
+  for(var i=0;i<MESES_DISPONIVEIS.length;i++){
+    var p = MESES_DISPONIVEIS[i].split('-').map(Number);
+    var label = new Date(p[0],p[1]-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    sel.innerHTML += '<option value="'+MESES_DISPONIVEIS[i]+'">'+label+'</option>';
+  }
+  var alvo = MESES_DISPONIVEIS.indexOf(mesAtual())>-1 ? mesAtual() : (MESES_DISPONIVEIS[0]||'');
+  S.filtros.mes = alvo;
+  sel.value = alvo;
+}
+
+async function carregarMes(mes){
+  if(!mes){ console.log('ℹ️ Nenhum mês selecionado.'); return; }
+  MES_ATUAL_LOAD = mes;
+  S.filtros.mes = mes;
+  var sel = document.getElementById('fMes');
+  if(sel) sel.value = mes;
+  console.log('🔎 Carregando mês '+mes+' de "dados/'+mes+'.xlsx"...');
+  try{
+    var res = await fetch('dados/'+mes+'.xlsx', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var buf = await res.arrayBuffer();
+    console.log('✅ Arquivo baixado ('+mes+'.xlsx): '+buf.byteLength+' bytes');
+    processWorkbook(buf, mes+'.xlsx', false);
+  }catch(err){
+    console.error('❌ Falha ao carregar dados/'+mes+'.xlsx:', err.message);
+    toast('Não foi possível carregar o mês '+mes+'. Verifique se dados/'+mes+'.xlsx existe.');
+    updateFileInfo();
   }
 }
 
@@ -573,12 +659,14 @@ function processWorkbook(data, nome, isCsv){
   console.log('✅ Quantidade de linhas processadas: '+res.recs.length+' participação(ões) de auditor ('+res.comAud+' linhas com auditor, '+res.skip+' ignoradas)');
 
   S.records=res.recs; S.arquivo=nome; S.atualizado=new Date();
+  S.filtros.mes = MES_ATUAL_LOAD || S.filtros.mes;
+  var selMes=document.getElementById('fMes');
+  if(selMes) selMes.value = S.filtros.mes;
   document.getElementById('vazio').style.display='none';
   document.getElementById('app').style.display='';
-  populateMonths();
   renderAll();
-  console.log('✅ Dashboard renderizado com '+res.recs.length+' registro(s).');
-  toast('Planilha carregada: '+res.recs.length+' registro(s).');
+  console.log('✅ Dashboard renderizado com '+res.recs.length+' registro(s) do mês '+S.filtros.mes+'.');
+  toast('Mês '+S.filtros.mes+' carregado: '+res.recs.length+' registro(s).');
 }
 
 /* ---------- filtros e janela de tempo ---------- */
@@ -667,22 +755,6 @@ function calcStatus(stats, meta, feriasFlag){
 }
 
 /* ---------- renderização ---------- */
-function populateMonths(){
-  var set={};
-  for(var i=0;i<S.records.length;i++){ set[S.records[i].data.getFullYear()+'-'+String(S.records[i].data.getMonth()+1).padStart(2,'0')]=true; }
-  var meses=Object.keys(set).sort();
-  var sel=document.getElementById('fMes');
-  if(!sel) return;
-  sel.innerHTML='<option value="todos">Todos os meses</option>';
-  for(var j=0;j<meses.length;j++){
-    var p=meses[j].split('-').map(Number);
-    sel.innerHTML+='<option value="'+meses[j]+'">'+new Date(p[0],p[1]-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'})+'</option>';
-  }
-  var cur=mesAtual();
-  S.filtros.mes=meses.indexOf(cur)>-1?cur:(meses[meses.length-1]||'todos');
-  sel.value=S.filtros.mes;
-}
-
 function rebuildPessoaSelect(){
   var opts=[{v:'',t:'Todos os colaboradores'}];
   var ps=pessoas();
@@ -937,9 +1009,10 @@ function cardGerente(r,i){
 }
 
 function updateFileInfo(){
-  document.getElementById('fileInfo').textContent=S.arquivo
-    ? '📄 '+S.arquivo+' · '+S.records.length+' registros · DEOP · atualizado às '+(S.atualizado?S.atualizado.toLocaleTimeString('pt-BR'):'')
-    : 'Nenhum arquivo carregado';
+  var el=document.getElementById('fileInfo');
+  el.textContent = S.atualizado
+    ? 'DEOP · atualizado às '+S.atualizado.toLocaleTimeString('pt-BR')
+    : 'DEOP · Carregando dados...';
 }
 
 /* ---------- relatório individual ---------- */
@@ -1026,15 +1099,15 @@ function togglePrint(){
 }
 
 function toggleSup(){
-  if(!S.records.length){ toast('Carregue a planilha primeiro.'); return; }
-  if(!S.filtros.regional){ toast('Selecione uma regional no filtro para ativar o Modo Supervisor.'); return; }
+  if(!S.records.length){ toast('Carregue os dados primeiro.'); return; }
+  if(!S.filtros.regional){ toast('Selecione uma regional no filtro para ativar a Visão Executiva.'); return; }
   document.body.classList.toggle('modo-sup');
   if(document.body.classList.contains('modo-sup')) window.scrollTo(0,0);
 }
 
 /* ---------- Card (geração e exportação) ---------- */
 function gerarCard(autoExport){
-  if(!S.records.length){ toast('Carregue a planilha primeiro.'); return; }
+  if(!S.records.length){ toast('Carregue os dados primeiro.'); return; }
   if(!S.filtros.regional){ toast('Selecione uma regional no filtro para gerar o card.'); return; }
   var reg=S.filtros.regional;
   var group=groupStats(filteredRecords());
@@ -1116,7 +1189,7 @@ function gerarCard(autoExport){
     +avisoCard
     +'</div>'
     +'<div class="wa-status '+geral.tipo+'"><div class="wa-big">'+icone(geral.tipo)+' '+geral.titulo+'</div><div class="wa-msg">'+geral.msg+'</div>'+detCard+'</div>'
-    +'<div class="wa-foot">DEOP · Período: '+periodoTexto()+' · Gerado pelo Painel SVI</div>';
+    +'<div class="wa-foot">DEOP | Energisa Sergipe | Elaborado por André Felix · Período: '+periodoTexto()+'</div>';
 
   var L=[];
   L.push('📊 SVI DEOP - '+reg);
@@ -1145,6 +1218,7 @@ function gerarCard(autoExport){
     L.push('');
     L.push(AVISO_FERIAS_TXT);
   }
+  L.push('DEOP | Energisa Sergipe | Elaborado por André Felix');
   ultimoCardTexto=L.join('\n');
 
   document.getElementById('waModal').classList.add('aberto');
@@ -1192,7 +1266,7 @@ function toast(msg){
   toastTimer=setTimeout(function(){ t.classList.remove('show'); },2600);
 }
 
-/* ---------- carregamento ---------- */
+/* ---------- carregamento (contingência: arrastar arquivo) ---------- */
 function lerArquivo(f){
   console.log('✅ Arquivo selecionado: "'+f.name+'" ('+f.size+' bytes)');
   if(!/\.(xlsx|xls|xlsm|csv)$/i.test(f.name)){
@@ -1217,21 +1291,6 @@ function lerArquivo(f){
     toast('Não foi possível ler o arquivo.');
   };
   isCsv?reader.readAsText(f):reader.readAsArrayBuffer(f);
-}
-
-async function carregarUrl(){
-  if(!CONFIG.excelUrl){ console.log('ℹ️ excelUrl vazio: use o botão Carregar planilha.'); return; }
-  console.log('🔎 Buscando planilha automática em "'+CONFIG.excelUrl+'"...');
-  try{
-    var res=await fetch(CONFIG.excelUrl,{cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    var buf=await res.arrayBuffer();
-    console.log('✅ Arquivo baixado: '+buf.byteLength+' bytes');
-    processWorkbook(buf,CONFIG.excelUrl,false);
-  }catch(err){
-    console.error('❌ Falha no carregamento automático (fetch):',err.message);
-    toast('Não foi possível carregar automaticamente ('+CONFIG.excelUrl+'). Use o botão Carregar planilha.');
-  }
 }
 
 function bindDragDrop(){
@@ -1267,6 +1326,8 @@ function bindFilters(){
           var pSel=document.getElementById('fPessoa');
           if(pSel) pSel.value='';
         }
+        /* Trocar de mês = carregar o arquivo mensal correspondente */
+        if(chave==='mes'){ if(el.value) carregarMes(el.value); return; }
         renderAll();
       });
     })(k);
@@ -1285,7 +1346,7 @@ function bindFilters(){
   var btnLimpar=document.getElementById('btnLimpar');
   if(btnLimpar){
     btnLimpar.addEventListener('click',function(){
-      S.filtros={ regional:'', cargo:'todos', pessoa:'', mes:S.filtros.mes||'todos', ini:'', fim:'', quinzena:'1', busca:'', periodo:'mensal' };
+      S.filtros={ regional:'', cargo:'todos', pessoa:'', mes:S.filtros.mes||'', ini:'', fim:'', quinzena:'1', busca:'', periodo:'mensal' };
       var ids=['fRegional','fCargo','fPessoa','fIni','fFim','fBusca','fQuinzena'];
       for(var j=0;j<ids.length;j++){
         var el2=document.getElementById(ids[j]);
@@ -1326,9 +1387,18 @@ async function init(){
   } else {
     console.error('❌ fileInput não encontrado no HTML.');
   }
-  /* 1º carrega a configuração (férias), 2º carrega a planilha automática */
+  /* 1º configuração (férias + meses opcionais), 2º descoberta dos meses, 3º carrega o mês padrão */
   await carregarConfig();
-  if(CONFIG.excelUrl) carregarUrl();
+  await descobrirMeses();
+  preencherSelectMeses();
+  var alvo = S.filtros.mes || (MESES_DISPONIVEIS[0]||'');
+  if(alvo){
+    carregarMes(alvo);
+  } else {
+    console.warn('⚠️ Nenhum arquivo mensal disponível em dados/.');
+    toast('Nenhum arquivo mensal encontrado. Adicione arquivos como dados/2026-08.xlsx.');
+    updateFileInfo();
+  }
 }
 
 window.addEventListener('error',function(ev){
