@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel SVI · Inspeções</title>
+<title>Painel DEOP · SVI Inspeções</title>
 
 <script>
 /* ============================================================
@@ -197,7 +197,7 @@ main{max-width:1360px;margin:0 auto;padding:20px}
 .wa-k{font-size:11.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .wa-v{font-size:17px;font-weight:800;color:#10243E;line-height:1.15}
 .wa-v.az{color:#005CA9}
-.wa-mini{font-size:10.5px;color:#64748B;margin-top:4px;line-height:1.35}
+.wa-mini{font-size:10.5px;color:#64748B;margin-top:4px;line-height:1.4}
 .wa-pend{font-size:11px;color:#92400E;margin-top:4px;line-height:1.4}
 .wa-pend.ok{color:#166534}
 .wa-pend.fer{color:#0369A1}
@@ -253,8 +253,8 @@ body.modo-sup .hero-status{min-width:320px}
     <div class="hbrand">
       <img src="img/logo-energisa.png" alt="Energisa" class="logo" onerror="this.style.display='none'">
       <div>
-        <div class="tt">Painel SVI <span style="color:#F47920">· Inspeções</span></div>
-        <div class="ts">Acompanhamento operacional de metas</div>
+        <div class="tt">📊 Painel DEOP <span style="color:#F47920">· SVI Inspeções</span></div>
+        <div class="ts">DEOP · Acompanhamento operacional de metas</div>
       </div>
     </div>
     <div class="hmeta"><span id="fileInfo">Carregando dados automaticamente...</span></div>
@@ -263,7 +263,7 @@ body.modo-sup .hero-status{min-width:320px}
       <button class="btn btn-branco" onclick="toggleSup()">📱 Modo Supervisor</button>
       <button class="btn btn-branco" onclick="togglePrint()">📸 Gerar Visual</button>
       <button class="btn btn-branco" onclick="gerarCard(true)">📄 Exportar PNG</button>
-      <button class="btn btn-laranja" onclick="gerarCard(false)">📱 Gerar Card WhatsApp</button>
+      <button class="btn btn-laranja" onclick="gerarCard(false)">📱 Gerar Card</button>
     </div>
   </div>
 </header>
@@ -283,7 +283,7 @@ body.modo-sup .hero-status{min-width:320px}
 
     <div class="filters no-print">
       <div class="fld"><span>Regional</span><select id="fRegional"></select></div>
-      <div class="fld"><span>Cargo</span><select id="fCargo"><option value="todos">Todos</option><option value="supervisor">Supervisor</option><option value="tecnico">Técnico</option></select></div>
+      <div class="fld"><span>Cargo</span><select id="fCargo"><option value="todos">Todos</option><option value="supervisor">Supervisor</option><option value="tecnico">Técnico</option><option value="coordenador">Coordenador</option><option value="gerente">Gerente</option></select></div>
       <div class="fld"><span>Colaborador</span><select id="fPessoa"></select></div>
       <div class="fld"><span>Mês</span><select id="fMes"></select></div>
       <div class="fld"><span>Data inicial</span><input type="date" id="fIni"></div>
@@ -306,6 +306,12 @@ body.modo-sup .hero-status{min-width:320px}
       <div class="kpi a"><div class="lab">Técnicos</div><div class="val" id="kTec">0</div><div class="sub" id="kTecSub">no filtro</div></div>
       <div class="kpi g"><div class="lab">🟢 Meta completa</div><div class="val" id="kTecOk">0</div><div class="sub">técnicos</div></div>
       <div class="kpi b"><div class="lab">🔴 Abaixo da meta</div><div class="val" id="kTecAb">0</div><div class="sub">técnicos</div></div>
+      <div class="kpi a"><div class="lab">Coordenadores</div><div class="val" id="kCoord">0</div><div class="sub">no filtro</div></div>
+      <div class="kpi g"><div class="lab">🟢 Meta completa</div><div class="val" id="kCoordOk">0</div><div class="sub">coordenadores</div></div>
+      <div class="kpi b"><div class="lab">🔴 Abaixo da meta</div><div class="val" id="kCoordAb">0</div><div class="sub">coordenadores</div></div>
+      <div class="kpi a"><div class="lab">Gerente</div><div class="val" id="kGer">0</div><div class="sub">no filtro</div></div>
+      <div class="kpi g"><div class="lab">🟢 Meta completa</div><div class="val" id="kGerOk">0</div><div class="sub">gerente</div></div>
+      <div class="kpi b"><div class="lab">🔴 Abaixo da meta</div><div class="val" id="kGerAb">0</div><div class="sub">gerente</div></div>
       <div class="kpi f"><div class="lab">🏖️ Em férias</div><div class="val" id="kFer">0</div><div class="sub">meta não considerada</div></div>
       <div class="kpi o"><div class="lab">Total de SVIs</div><div class="val" id="kSvi">0</div><div class="sub" id="kSviSub">no período</div></div>
       <div class="kpi a"><div class="lab">Cumprimento geral</div><div class="val" id="kGeral">0%</div><div class="bar"><i id="kGeralBar" style="width:0%" class="abx"></i></div></div>
@@ -313,7 +319,8 @@ body.modo-sup .hero-status{min-width:320px}
 
     <div class="sec"><h2>👔 Supervisores <span class="badge" id="badgeSup">0</span></h2><div class="sub" id="subSup"></div><div class="grid" id="gridSup"></div></div>
     <div class="sec"><h2>🔧 Técnicos <span class="badge" id="badgeTec">0</span></h2><div class="sub" id="subTec"></div><div class="grid" id="gridTec"></div></div>
-    <div class="sec no-print" id="secSemCad" style="display:none"><h2>⚠️ Auditores sem cadastro <span class="badge" id="badgeSem">0</span></h2><div class="sub">Encontrados na planilha, mas ausentes do CONFIG. Adicione ao cadastro para aparecerem nas seções acima.</div><div class="grid" id="gridSemCad"></div></div>
+    <div class="sec"><h2>📊 Coordenadores <span class="badge" id="badgeCoord">0</span></h2><div class="sub" id="subCoord"></div><div class="grid" id="gridCoord"></div></div>
+    <div class="sec"><h2>👔 Gerente <span class="badge" id="badgeGer">0</span></h2><div class="sub" id="subGer"></div><div class="grid" id="gridGer"></div></div>
   </div>
 </main>
 
@@ -323,7 +330,7 @@ body.modo-sup .hero-status{min-width:320px}
     <textarea id="relTexto" readonly></textarea>
     <div class="mbtns">
       <button class="btn btn-azul" onclick="copiarRelatorio()">📋 Copiar mensagem</button>
-      <button class="btn btn-laranja" id="btnWa" onclick="enviarWhatsAppRelatorio()">💬 WhatsApp</button>
+      <button class="btn btn-laranja" id="btnWa" onclick="enviarWhatsAppRelatorio()">💬 Compartilhar Card</button>
       <button class="btn btn-linha" onclick="fecharModal()">Fechar</button>
     </div>
   </div>
@@ -331,12 +338,12 @@ body.modo-sup .hero-status{min-width:320px}
 
 <div class="modal no-print" id="waModal">
   <div class="mpanel">
-    <div class="mhead"><h3>📱 Card WhatsApp · <span id="waCardReg">Regional</span></h3><button class="x" onclick="fecharWaModal()">×</button></div>
+    <div class="mhead"><h3>📱 Card · <span id="waCardReg">Regional</span></h3><button class="x" onclick="fecharWaModal()">×</button></div>
     <div class="wa-wrap"><div id="waCard"></div></div>
     <div class="mbtns">
       <button class="btn btn-azul" onclick="exportarWaPNG()">📄 Exportar PNG</button>
       <button class="btn btn-azul" onclick="copiarCardTexto()">📋 Copiar resumo</button>
-      <button class="btn btn-laranja" id="waShareCard" onclick="enviarWhatsAppCard()">💬 Enviar WhatsApp</button>
+      <button class="btn btn-laranja" id="waShareCard" onclick="enviarWhatsAppCard()">💬 Compartilhar Card</button>
       <button class="btn btn-linha" onclick="fecharWaModal()">Fechar</button>
     </div>
   </div>
@@ -355,7 +362,7 @@ var CONFIG = {
 
   /* Férias (FALLBACK apenas se dados/configuracao.json não carregar).
      A fonte oficial é o arquivo dados/configuracao.json.
-     Nomes em MAIÚSCULA, valem para supervisores E técnicos. */
+     Nomes em MAIÚSCULA, valem para TODAS as categorias. */
   ferias: [
     'CARLOS HENRIQUE COSTA SANTOS',
     'PAULO RICARDO DE SANTANA',
@@ -371,8 +378,27 @@ var CONFIG = {
     tecnico: {
       mensal:    { total: 6, diurno: 0, noturno: 0, madrugada: 0 },
       quinzenal: { total: 6, diurno: 0, noturno: 0, madrugada: 0 }
+    },
+    coordenador: {
+      mensal:    { total: 4, diurno: 0, noturno: 0, madrugada: 0 },
+      quinzenal: { total: 4, diurno: 0, noturno: 0, madrugada: 0 }
+    },
+    gerente: {
+      mensal:    { total: 2, diurno: 0, noturno: 0, madrugada: 0 },
+      quinzenal: { total: 2, diurno: 0, noturno: 0, madrugada: 0 }
     }
   },
+
+  coordenadores: [
+    'Aliston Diego Barbosa da Silva',
+    'Bernard de Sa Gouveia',
+    'Fabiano Almeida Nascimento'
+  ],
+
+  gerentes: [
+    'Thyago Tanouss de Brito Maia'
+  ],
+
   regionais: [
     { nome: 'Aracaju Corte',   supervisores: ['Marcio da Silva Rocha'],                tecnicos: ['Paulo Ricardo de Santana'] },
     { nome: 'Aracaju Sul',     supervisores: [],                                       tecnicos: ['Flavia Aliaci da Cruz Couto'] },
@@ -390,10 +416,10 @@ var CONFIG = {
 /* ============================================================ */
 
 var S = { records:[], arquivo:'', atualizado:null, filtros:{ regional:'', cargo:'todos', pessoa:'', mes:'', ini:'', fim:'', quinzena:'1', busca:'', periodo:'mensal' } };
-var SUP = [], TEC = [], ultimoCardTexto = '', ultimaMsgRelatorio = '';
+var SUP = [], TEC = [], COORD = [], GER = [], ultimoCardTexto = '', ultimaMsgRelatorio = '';
 
-var AVISO_FERIAS_TXT = '⚠️ Atenção\nColaborador registrado em férias.\nA área responsável deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores, relatórios e KPIs.\nAo término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.';
-var AVISO_FERIAS_HTML = '<div class="aviso"><div class="at">⚠️ Atenção</div><div class="am">Colaborador registrado em férias. A área responsável deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores, relatórios e KPIs. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div></div>';
+var AVISO_FERIAS_TXT = '⚠️ Atenção\nColaborador registrado em férias.\nO supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores.\nAo término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.';
+var AVISO_FERIAS_HTML = '<div class="aviso"><div class="at">⚠️ Atenção</div><div class="am">Colaborador registrado em férias. O supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div></div>';
 
 /* ---------- helpers ---------- */
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -402,6 +428,8 @@ function mesAtual(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMo
 function fmtData(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
 function icone(t){ return ({ok:'🟢',pend:'🟡',abx:'🔴',fer:'🏖️'}[t]||''); }
 function emFerias(normP){ return CONFIG.ferias.indexOf(normP) > -1; }
+function cargoLabel(c){ return ({supervisor:'Supervisor',tecnico:'Técnico',coordenador:'Coordenador',gerente:'Gerente'}[c]||c); }
+function ehRegional(c){ return c==='supervisor'||c==='tecnico'; }
 
 function parseDate(v){
   if(v==null) return null;
@@ -440,7 +468,7 @@ async function carregarConfig(){
     if(cfg && Array.isArray(cfg.ferias)){
       var lista = cfg.ferias.map(function(n){ return norm(n); }).filter(Boolean);
       if(lista.length){ CONFIG.ferias = lista; }
-      console.log('✅ Configuração carregada: '+lista.length+' colaborador(es) em férias (supervisores e técnicos).');
+      console.log('✅ Configuração carregada: '+lista.length+' colaborador(es) em férias (todas as categorias).');
     } else {
       console.warn('⚠️ configuracao.json sem lista "ferias" válida. Usando fallback local.');
     }
@@ -588,6 +616,7 @@ function metaPara(cargo){
   return CONFIG.metas[cargo][S.filtros.periodo==='quinzena'?'quinzenal':'mensal'];
 }
 
+/* Apenas colaboradores cadastrados na estrutura oficial */
 function pessoas(){
   var out=[];
   for(var i=0;i<CONFIG.regionais.length;i++){
@@ -595,6 +624,8 @@ function pessoas(){
     for(var j=0;j<reg.supervisores.length;j++) out.push({nome:reg.supervisores[j],norm:norm(reg.supervisores[j]),cargo:'supervisor',regional:reg.nome});
     for(var k=0;k<reg.tecnicos.length;k++) out.push({nome:reg.tecnicos[k],norm:norm(reg.tecnicos[k]),cargo:'tecnico',regional:reg.nome});
   }
+  for(var m=0;m<CONFIG.coordenadores.length;m++) out.push({nome:CONFIG.coordenadores[m],norm:norm(CONFIG.coordenadores[m]),cargo:'coordenador',regional:'DEOP'});
+  for(var g=0;g<CONFIG.gerentes.length;g++) out.push({nome:CONFIG.gerentes[g],norm:norm(CONFIG.gerentes[g]),cargo:'gerente',regional:'DEOP'});
   return out;
 }
 
@@ -609,7 +640,7 @@ function groupStats(filtered){
   return g;
 }
 
-/* ---------- status: 🟢 · 🟡 · 🔴 · 🏖️ (vale para supervisor E técnico) ---------- */
+/* ---------- status: 🟢 · 🟡 · 🔴 · 🏖️ (vale para TODAS as categorias) ---------- */
 function calcStatus(stats, meta, feriasFlag){
   if(feriasFlag){
     return { tipo:'fer', icone:'🏖️', label:'Em Férias', titulo:'EM FÉRIAS',
@@ -657,9 +688,9 @@ function rebuildPessoaSelect(){
   var ps=pessoas();
   for(var i=0;i<ps.length;i++){
     var p=ps[i];
-    if(S.filtros.regional&&p.regional!==S.filtros.regional) continue;
+    if(ehRegional(p.cargo)&&S.filtros.regional&&p.regional!==S.filtros.regional) continue;
     if(S.filtros.cargo!=='todos'&&p.cargo!==S.filtros.cargo) continue;
-    opts.push({v:p.norm,t:p.nome+' ('+(p.cargo==='supervisor'?'Sup.':'Téc.')+(emFerias(p.norm)?' · 🏖️ Férias':'')+')'});
+    opts.push({v:p.norm,t:p.nome+' ('+cargoLabel(p.cargo)+(emFerias(p.norm)?' · 🏖️ Férias':'')+')'});
   }
   var sel=document.getElementById('fPessoa');
   if(!sel) return;
@@ -677,6 +708,8 @@ function metaDesc(cargo){
     var per=S.filtros.periodo==='quinzena'?'quinzenal':'mensal';
     return 'Meta '+per+': '+m.total+' SVI (🌞'+m.diurno+' diurnas, 🌙'+m.noturno+' noturnas'+(m.madrugada?', 🌃'+m.madrugada+' de madrugada':'')+')';
   }
+  if(cargo==='coordenador') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)';
+  if(cargo==='gerente') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)';
   return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)'+(S.filtros.periodo==='quinzena'?' · técnicos mantêm meta mensal':'');
 }
 
@@ -685,27 +718,31 @@ function renderAll(){
   rebuildPessoaSelect();
   var filtered=filteredRecords();
   var group=groupStats(filtered);
-  var metaSup=metaPara('supervisor'), metaTec=metaPara('tecnico');
-  var sup=[], tec=[];
+  var sup=[], tec=[], coord=[], ger=[];
   var ps=pessoas();
   for(var i=0;i<ps.length;i++){
     var p=ps[i];
-    if(S.filtros.regional&&p.regional!==S.filtros.regional) continue;
+    if(ehRegional(p.cargo)&&S.filtros.regional&&p.regional!==S.filtros.regional) continue;
     if(S.filtros.cargo!=='todos'&&p.cargo!==S.filtros.cargo) continue;
     if(S.filtros.pessoa&&p.norm!==S.filtros.pessoa) continue;
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=p.cargo==='supervisor'?metaSup:metaTec;
+    var meta=metaPara(p.cargo);
     var st=calcStatus(stats,meta,emFerias(p.norm));
-    (p.cargo==='supervisor'?sup:tec).push({nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:st});
+    var row={nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:st};
+    if(p.cargo==='supervisor') sup.push(row);
+    else if(p.cargo==='tecnico') tec.push(row);
+    else if(p.cargo==='coordenador') coord.push(row);
+    else ger.push(row);
   }
   var b=S.filtros.busca?norm(S.filtros.busca):'';
-  SUP=b?sup.filter(function(r){ return r.norm.indexOf(b)>-1||r.regional.toUpperCase().indexOf(b)>-1; }):sup;
-  TEC=b?tec.filter(function(r){ return r.norm.indexOf(b)>-1||r.regional.toUpperCase().indexOf(b)>-1; }):tec;
+  function filtrar(arr){ return b?arr.filter(function(r){ return r.norm.indexOf(b)>-1||r.regional.toUpperCase().indexOf(b)>-1; }):arr; }
+  SUP=filtrar(sup); TEC=filtrar(tec); COORD=filtrar(coord); GER=filtrar(ger);
   renderHero(group);
-  renderKpis(SUP,TEC,filtered);
+  renderKpis(SUP,TEC,COORD,GER,filtered);
   renderSection('gridSup','badgeSup','subSup',SUP,'supervisor');
   renderSection('gridTec','badgeTec','subTec',TEC,'tecnico');
-  renderSemCadastro(group);
+  renderSection('gridCoord','badgeCoord','subCoord',COORD,'coordenador');
+  renderSection('gridGer','badgeGer','subGer',GER,'gerente');
   updateFileInfo();
 }
 
@@ -715,7 +752,7 @@ function renderHero(group){
   if(!reg){ hero.style.display='none'; return; }
   var itens=pessoas().filter(function(p){ return p.regional===reg; }).map(function(p){
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=p.cargo==='supervisor'?metaPara('supervisor'):metaPara('tecnico');
+    var meta=metaPara(p.cargo);
     return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,emFerias(p.norm))};
   });
   var sup=null, tec=null;
@@ -759,7 +796,7 @@ function renderHero(group){
   }
   hero.innerHTML=
     '<div class="hero-top">'
-    +'<div><div class="hero-reg">📍 '+esc(reg)+'</div><div class="hero-periodo">Período: '+periodoTexto()+'</div></div>'
+    +'<div><div class="hero-reg">📍 '+esc(reg)+' · DEOP</div><div class="hero-periodo">Período: '+periodoTexto()+'</div></div>'
     +'<div class="hero-status '+geral.tipo+'"><span>'+icone(geral.tipo)+' '+geral.titulo+'</span><div class="hero-msg">'+geral.msg+'</div>'+detHtml+'</div>'
     +'</div>'
     +'<div class="hero-grid">'
@@ -772,11 +809,14 @@ function renderHero(group){
   hero.style.display='block';
 }
 
-function renderKpis(sup,tec,filtered){
+function renderKpis(sup,tec,coord,ger,filtered){
   function c(id){ return document.getElementById(id); }
   var supAtivos=sup.filter(function(r){ return r.st.tipo!=='fer'; });
   var tecAtivos=tec.filter(function(r){ return r.st.tipo!=='fer'; });
-  var ferias=sup.concat(tec).filter(function(r){ return r.st.tipo==='fer'; });
+  var coordAtivos=coord.filter(function(r){ return r.st.tipo!=='fer'; });
+  var gerAtivos=ger.filter(function(r){ return r.st.tipo!=='fer'; });
+  var todos=[].concat(sup,tec,coord,ger);
+  var ferias=todos.filter(function(r){ return r.st.tipo==='fer'; });
   c('kSup').textContent=supAtivos.length;
   c('kSupOk').textContent=supAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
   c('kSupAb').textContent=supAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
@@ -784,14 +824,20 @@ function renderKpis(sup,tec,filtered){
   c('kTecSub').textContent=tecAtivos.length?('no filtro · 🏖️ '+ferias.length+' de férias'):'no filtro';
   c('kTecOk').textContent=tecAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
   c('kTecAb').textContent=tecAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
+  c('kCoord').textContent=coordAtivos.length;
+  c('kCoordOk').textContent=coordAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
+  c('kCoordAb').textContent=coordAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
+  c('kGer').textContent=gerAtivos.length;
+  c('kGerOk').textContent=gerAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
+  c('kGerAb').textContent=gerAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
   c('kFer').textContent=ferias.length;
   var unicos={};
   for(var i=0;i<filtered.length;i++){ unicos[filtered[i].numero||filtered[i].data.toISOString()]=true; }
   c('kSvi').textContent=Object.keys(unicos).length;
   c('kSviSub').textContent=filtered.length+' participações';
   var somaReal=0, somaMeta=0;
-  var todos=supAtivos.concat(tecAtivos);
-  for(var j=0;j<todos.length;j++){ somaReal+=todos[j].stats.total; somaMeta+=todos[j].meta.total; }
+  var ativosTodos=supAtivos.concat(tecAtivos,coordAtivos,gerAtivos);
+  for(var j=0;j<ativosTodos.length;j++){ somaReal+=ativosTodos[j].stats.total; somaMeta+=ativosTodos[j].meta.total; }
   var geral=somaMeta?Math.round(somaReal/somaMeta*100):0;
   c('kGeral').textContent=geral+'%';
   c('kGeralBar').style.width=Math.min(100,geral)+'%';
@@ -804,7 +850,12 @@ function renderSection(gridId,badgeId,subId,rows,cargo){
   var grid=document.getElementById(gridId);
   if(!rows.length){ grid.innerHTML='<div class="vazio">Nenhum colaborador neste filtro.</div>'; return; }
   grid.innerHTML='';
-  for(var i=0;i<rows.length;i++){ grid.innerHTML+=cargo==='supervisor'?cardSupervisor(rows[i],i):cardTecnico(rows[i],i); }
+  for(var i=0;i<rows.length;i++){
+    if(cargo==='supervisor') grid.innerHTML+=cardSupervisor(rows[i],i);
+    else if(cargo==='tecnico') grid.innerHTML+=cardTecnico(rows[i],i);
+    else if(cargo==='coordenador') grid.innerHTML+=cardCoordenador(rows[i],i);
+    else grid.innerHTML+=cardGerente(rows[i],i);
+  }
 }
 
 function alerta(st){
@@ -823,18 +874,21 @@ function mini(label,val,metaV){
   return '<div class="mini"><span>'+label+'</span><b class="'+cls+'">'+val+'/'+metaV+'</b><div class="bar sm"><i style="width:'+w+'%" class="'+barCls+'"></i></div></div>';
 }
 
+function cardFeriasBase(r,i,cargo){
+  return '<div class="card fer">'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip fer">🏖️ Em Férias</span></div>'
+    +alerta(r.st)
+    +AVISO_FERIAS_HTML
+    +'<div class="c-rodape"><span>Última: '+(r.stats.ultima?fmtData(r.stats.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\''+cargo+'\')">📋 Relatório</button></span></div>'
+    +'</div>';
+}
+
+/* Card do Supervisor: exibe turnos (meta por horário) */
 function cardSupervisor(r,i){
   var st=r.st, s=r.stats, m=r.meta;
-  if(st.tipo==='fer'){
-    return '<div class="card fer">'
-      +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+'</div></div><span class="chip fer">🏖️ Em Férias</span></div>'
-      +alerta(st)
-      +AVISO_FERIAS_HTML
-      +'<div class="c-rodape"><span>Última: '+(s.ultima?fmtData(s.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\'sup\')">📋 Relatório</button></span></div>'
-      +'</div>';
-  }
+  if(st.tipo==='fer') return cardFeriasBase(r,i,'sup');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
     +'<div class="minis">'+mini('🌞 Diurno',s.diurno,m.diurno)+mini('🌙 Noturno',s.noturno,m.noturno)+mini('🌃 Madrugada',s.madrugada,m.madrugada)+'</div>'
@@ -843,58 +897,48 @@ function cardSupervisor(r,i){
     +'</div>';
 }
 
+/* Card do Técnico: sem turnos */
 function cardTecnico(r,i){
   var st=r.st, s=r.stats, m=r.meta;
-  if(st.tipo==='fer'){
-    return '<div class="card fer">'
-      +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+'</div></div><span class="chip fer">🏖️ Em Férias</span></div>'
-      +alerta(st)
-      +AVISO_FERIAS_HTML
-      +'<div class="c-rodape"><span>Última: '+(s.ultima?fmtData(s.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\'tec\')">📋 Relatório</button></span></div>'
-      +'</div>';
-  }
+  if(st.tipo==='fer') return cardFeriasBase(r,i,'tec');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
-    +'<div class="minis">'+mini('🌞 Diurno',s.diurno,m.diurno)+mini('🌙 Noturno',s.noturno,m.noturno)+mini('🌃 Madrugada',s.madrugada,m.madrugada)+'</div>'
     +alerta(st)
     +'<div class="c-rodape"><span>Última: '+(s.ultima?fmtData(s.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\'tec\')">📋 Relatório</button></span></div>'
     +'</div>';
 }
 
-function regiaoDe(normP){
-  var m={};
-  for(var i=0;i<S.records.length;i++){ if(S.records[i].norm===normP&&S.records[i].regiao){ m[S.records[i].regiao]=(m[S.records[i].regiao]||0)+1; } }
-  var best='',n=0;
-  for(var k in m){ if(m[k]>n){ n=m[k]; best=k; } }
-  return best;
+/* Card do Coordenador: meta 4, sem turnos */
+function cardCoordenador(r,i){
+  var st=r.st, s=r.stats, m=r.meta;
+  if(st.tipo==='fer') return cardFeriasBase(r,i,'coord');
+  return '<div class="card">'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
+    +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
+    +alerta(st)
+    +'<div class="c-rodape"><span>Última: '+(s.ultima?fmtData(s.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\'coord\')">📋 Relatório</button></span></div>'
+    +'</div>';
 }
 
-function renderSemCadastro(group){
-  var cad={};
-  var ps=pessoas();
-  for(var i=0;i<ps.length;i++) cad[ps[i].norm]=true;
-  var items=[];
-  for(var k in group){ if(!cad[k]) items.push({norm:k,total:group[k].total,diurno:group[k].diurno,noturno:group[k].noturno,madrugada:group[k].madrugada}); }
-  items.sort(function(a,b){ return b.total-a.total; });
-  var sec=document.getElementById('secSemCad');
-  if(!items.length){ sec.style.display='none'; return; }
-  sec.style.display='';
-  document.getElementById('badgeSem').textContent=items.length;
-  var grid=document.getElementById('gridSemCad');
-  grid.innerHTML='';
-  for(var j=0;j<items.length;j++){
-    var it=items[j], reg=regiaoDe(it.norm);
-    grid.innerHTML+='<div class="card"><div class="nome">'+esc(it.norm)+'</div><div class="reg">⚠️ Não está no cadastro (CONFIG)'+(reg?' · Planilha: '+esc(reg):'')+'</div>'
-      +'<div class="c-total"><span>Total: <b>'+it.total+'</b></span></div>'
-      +'<div class="minis"><div class="mini"><span>🌞 Diurno</span><b>'+it.diurno+'</b></div><div class="mini"><span>🌙 Noturno</span><b>'+it.noturno+'</b></div><div class="mini"><span>🌃 Madrugada</span><b>'+it.madrugada+'</b></div></div></div>';
-  }
+/* Card do Gerente: meta 2, sem turnos */
+function cardGerente(r,i){
+  var st=r.st, s=r.stats, m=r.meta;
+  if(st.tipo==='fer') return cardFeriasBase(r,i,'ger');
+  return '<div class="card">'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
+    +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
+    +alerta(st)
+    +'<div class="c-rodape"><span>Última: '+(s.ultima?fmtData(s.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\'ger\')">📋 Relatório</button></span></div>'
+    +'</div>';
 }
 
 function updateFileInfo(){
   document.getElementById('fileInfo').textContent=S.arquivo
-    ? '📄 '+S.arquivo+' · '+S.records.length+' registros · atualizado às '+(S.atualizado?S.atualizado.toLocaleTimeString('pt-BR'):'')
+    ? '📄 '+S.arquivo+' · '+S.records.length+' registros · DEOP · atualizado às '+(S.atualizado?S.atualizado.toLocaleTimeString('pt-BR'):'')
     : 'Nenhum arquivo carregado';
 }
 
@@ -903,7 +947,7 @@ function textoRelatorio(row){
   var st=row.st;
   var L=[];
   if(st.tipo==='fer'){
-    L.push('🏖️ SVI - '+(row.cargo==='supervisor'?'Supervisor':'Técnico')+' '+row.nome);
+    L.push('🏖️ SVI DEOP - '+cargoLabel(row.cargo)+' '+row.nome);
     L.push('Regional: '+row.regional);
     L.push('Período: '+periodoTexto());
     L.push('Status: Em Férias.');
@@ -914,7 +958,7 @@ function textoRelatorio(row){
   }
   var isSup=row.cargo==='supervisor';
   var s=row.stats, m=row.meta;
-  L.push('✅ SVI - '+(isSup?'Supervisor':'Técnico')+' '+row.nome);
+  L.push('✅ SVI DEOP - '+cargoLabel(row.cargo)+' '+row.nome);
   L.push('Regional: '+row.regional);
   L.push('Período: '+periodoTexto());
   if(isSup){
@@ -937,9 +981,6 @@ function textoRelatorio(row){
   } else {
     L.push('Meta: '+m.total);
     L.push('Realizadas: '+s.total);
-    L.push('🌞 Diurnas: '+s.diurno);
-    L.push('🌙 Noturnas: '+s.noturno);
-    L.push('🌃 Madrugada: '+s.madrugada);
     L.push(st.tipo==='abx'?'Faltam '+st.faltam.total+' inspeção(ões) para atingir a meta.':'Meta atingida!');
   }
   L.push('Percentual atingido: '+st.pct+'%');
@@ -948,11 +989,11 @@ function textoRelatorio(row){
 }
 
 function abrirRelatorio(i,cargo){
-  var row=cargo==='sup'?SUP[i]:TEC[i];
+  var row = cargo==='sup'?SUP[i] : cargo==='tec'?TEC[i] : cargo==='coord'?COORD[i] : GER[i];
   if(!row) return;
   var msg=textoRelatorio(row);
   ultimaMsgRelatorio = msg;
-  document.getElementById('relTitulo').textContent=(cargo==='sup'?'Supervisor':'Técnico')+' · '+row.nome;
+  document.getElementById('relTitulo').textContent=cargoLabel(row.cargo)+' · '+row.nome;
   document.getElementById('relTexto').value=msg;
   document.getElementById('modal').classList.add('aberto');
 }
@@ -991,7 +1032,7 @@ function toggleSup(){
   if(document.body.classList.contains('modo-sup')) window.scrollTo(0,0);
 }
 
-/* ---------- Card WhatsApp ---------- */
+/* ---------- Card (geração e exportação) ---------- */
 function gerarCard(autoExport){
   if(!S.records.length){ toast('Carregue a planilha primeiro.'); return; }
   if(!S.filtros.regional){ toast('Selecione uma regional no filtro para gerar o card.'); return; }
@@ -999,7 +1040,7 @@ function gerarCard(autoExport){
   var group=groupStats(filteredRecords());
   var itens=pessoas().filter(function(p){ return p.regional===reg; }).map(function(p){
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=p.cargo==='supervisor'?metaPara('supervisor'):metaPara('tecnico');
+    var meta=metaPara(p.cargo);
     return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,emFerias(p.norm))};
   });
   var sup=null, tec=null;
@@ -1047,19 +1088,25 @@ function gerarCard(autoExport){
   if(geral.det&&geral.det.length){ detCard='<div class="wa-det">'+geral.det.join(' ')+'</div>'; }
   var avisoCard='';
   if(itens.some(function(p){ return p.st.tipo==='fer'; })){
-    avisoCard='<div class="wa-aviso"><div class="at">⚠️ Atenção</div>Colaborador registrado em férias. A área responsável deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores, relatórios e KPIs. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div>';
+    avisoCard='<div class="wa-aviso"><div class="at">⚠️ Atenção</div>Colaborador registrado em férias. O supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div>';
+  }
+
+  /* Turnos: apenas para o Supervisor (meta por horário) */
+  var supTurnos='';
+  if(sup && sup.st.tipo!=='fer'){
+    supTurnos='<div class="wa-mini">🌞 Diurno: '+sup.stats.diurno+'/'+sup.meta.diurno+' · 🌙 Noturno: '+sup.stats.noturno+'/'+sup.meta.noturno+' · 🌃 Madrugada: '+sup.stats.madrugada+'/'+sup.meta.madrugada+'</div>';
   }
 
   document.getElementById('waCardReg').textContent=reg;
   document.getElementById('waCard').innerHTML=
     '<div class="wa-top">'
     +'<img src="img/logo-energisa.png" alt="Energisa" onerror="this.style.display=\'none\'">'
-    +'<div><div class="wa-title">Painel SVI</div><div class="wa-sub">Acompanhamento de inspeções</div></div>'
+    +'<div><div class="wa-title">Painel DEOP · SVI</div><div class="wa-sub">Acompanhamento de inspeções</div></div>'
     +'</div>'
     +'<div class="wa-body">'
-    +'<div class="wa-region">📍 '+esc(reg)+'</div>'
+    +'<div class="wa-region">📍 '+esc(reg)+' · DEOP</div>'
     +'<div class="wa-grid2">'
-    +'<div class="wa-pair"><div class="wa-k">👔 Supervisor</div><div class="wa-v">'+(sup?esc(sup.nome):'Não definido')+'</div><div class="wa-mini">'+(sup?(sup.st.tipo==='fer'?'🏖️ em férias':sup.stats.total+' / '+sup.meta.total+' SVI · '+sup.st.pct+'%'):'—')+'</div></div>'
+    +'<div class="wa-pair"><div class="wa-k">👔 Supervisor</div><div class="wa-v">'+(sup?esc(sup.nome):'Não definido')+'</div><div class="wa-mini">'+(sup?(sup.st.tipo==='fer'?'🏖️ em férias':sup.stats.total+' / '+sup.meta.total+' SVI · '+sup.st.pct+'%'):'—')+'</div>'+supTurnos+'</div>'
     +'<div class="wa-pair"><div class="wa-k">🔧 Técnico</div><div class="wa-v">'+(tec?esc(tec.nome):'Não definido')+'</div><div class="wa-mini">'+(tec?(tec.st.tipo==='fer'?'🏖️ em férias':tec.stats.total+' / '+tec.meta.total+' SVI · '+tec.st.pct+'%'):'—')+'</div></div>'
     +'<div class="wa-pair"><div class="wa-k">🎯 Meta</div><div class="wa-v az">'+alvo+' SVIs</div></div>'
     +'<div class="wa-pair"><div class="wa-k">✅ Realizado</div><div class="wa-v az">'+real+' SVIs</div></div>'
@@ -1069,11 +1116,16 @@ function gerarCard(autoExport){
     +avisoCard
     +'</div>'
     +'<div class="wa-status '+geral.tipo+'"><div class="wa-big">'+icone(geral.tipo)+' '+geral.titulo+'</div><div class="wa-msg">'+geral.msg+'</div>'+detCard+'</div>'
-    +'<div class="wa-foot">Período: '+periodoTexto()+' · Gerado pelo Painel SVI</div>';
+    +'<div class="wa-foot">DEOP · Período: '+periodoTexto()+' · Gerado pelo Painel SVI</div>';
 
   var L=[];
-  L.push('📊 SVI - '+reg);
+  L.push('📊 SVI DEOP - '+reg);
   L.push('👔 Supervisor: '+(sup?(sup.st.tipo==='fer'?sup.nome+' (🏖️ em férias)':sup.nome+' ('+sup.stats.total+'/'+sup.meta.total+' SVI, '+sup.st.pct+'%)'):'Não definido'));
+  if(sup && sup.st.tipo!=='fer'){
+    L.push('🌞 Diurno: '+sup.stats.diurno+'/'+sup.meta.diurno);
+    L.push('🌙 Noturno: '+sup.stats.noturno+'/'+sup.meta.noturno);
+    L.push('🌃 Madrugada: '+sup.stats.madrugada+'/'+sup.meta.madrugada);
+  }
   L.push('🔧 Técnico: '+(tec?(tec.st.tipo==='fer'?tec.nome+' (🏖️ em férias)':tec.nome+' ('+tec.stats.total+'/'+tec.meta.total+' SVI, '+tec.st.pct+'%)'):'Não definido'));
   L.push('🎯 Meta: '+alvo+' SVIs');
   L.push('✅ Realizado: '+real+' SVIs');
@@ -1112,7 +1164,7 @@ async function exportarWaPNG(){
   try{
     var canvas=await html2canvas(card,{backgroundColor:'#FFFFFF',scale:2,useCORS:true,logging:false});
     var link=document.createElement('a');
-    link.download='SVI-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
+    link.download='SVI-DEOP-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
     link.href=canvas.toDataURL('image/png');
     link.click();
     toast('Imagem exportada! ✅');
