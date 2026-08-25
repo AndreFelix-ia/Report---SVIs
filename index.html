@@ -439,6 +439,18 @@ function emFerias(normP){ return CONFIG.ferias.indexOf(normP) > -1; }
 function cargoLabel(c){ return ({supervisor:'Supervisor',tecnico:'Técnico',coordenador:'Coordenador',gerente:'Gerente'}[c]||c); }
 function ehRegional(c){ return c==='supervisor'||c==='tecnico'; }
 
+/* ============================================================
+   FILTRO DA COLUNA P (CHECKLIST)
+   Registros cuja descrição da coluna P esteja nesta lista são
+   EXCLUÍDOS da contabilização (antes de qualquer cálculo).
+   ============================================================ */
+var CHECKLIST_EXCLUIR = [
+  'INSPECAO - EPI (MUTIRAO OU PARADA DE SEGURANCA)',
+  'INSPECAO DE SEGURANCA - VEICULAR LEVE E EPC (MUTIRAO OU PARADA DE SEGURANCA)',
+  'MUTIRAO - VEICULAR - MUNCK & CESTO AEREO',
+  'MUTIRAO - VEICULAR, FERRAMENTAS E EPC - DEOP'
+];
+
 function parseDate(v){
   if(v==null) return null;
   if(v instanceof Date && !isNaN(v)) return v;
@@ -587,7 +599,7 @@ function detectSheet(wb){
 }
 
 function detectCols(ws, range){
-  var out={audCol:null,dateCol:null,numeroCol:null,regCol:null,headerRow:0,found:false};
+  var out={audCol:null,dateCol:null,numeroCol:null,regCol:null,checklistCol:null,headerRow:0,found:false};
   for(var r=0;r<=Math.min(range.e.r,4);r++){
     for(var c=0;c<=range.e.c;c++){
       var cell=getCell(ws,r,c); if(!cell||cell.v==null) continue;
@@ -596,6 +608,7 @@ function detectCols(ws, range){
       if(out.dateCol==null && /data.*inspe/.test(t)) out.dateCol=c;
       if(out.numeroCol==null && (t==='numero'||t==='nº'||t==='num')) out.numeroCol=c;
       if(out.regCol==null && /localidade|municip|^regi|unidade/.test(t)) out.regCol=c;
+      if(out.checklistCol==null && /checklist|check list/.test(t)) out.checklistCol=c;
     }
     if(out.audCol!=null && out.dateCol!=null){ out.headerRow=r; out.found=true; break; }
   }
@@ -603,7 +616,7 @@ function detectCols(ws, range){
 }
 
 function extractRecords(ws, range, cols){
-  var recs=[], seen={}, skip=0, comAud=0;
+  var recs=[], seen={}, skip=0, comAud=0, excluidos=0;
   var start=cols.headerRow+1;
   for(var r=start;r<=range.e.r;r++){
     var aCell=getCell(ws,r,cols.audCol);
@@ -611,6 +624,18 @@ function extractRecords(ws, range, cols){
     var aText=String(aCell.v).trim();
     if(!aText||aText==='0') continue;
     comAud++;
+
+    /* Filtro da coluna P (Checklist): exclui mutirões e paradas de segurança */
+    var chk='';
+    if(cols.checklistCol!=null){
+      var chkCell=getCell(ws,r,cols.checklistCol);
+      if(chkCell&&chkCell.v!=null) chk=String(chkCell.v).trim();
+    }
+    if(chk && CHECKLIST_EXCLUIR.indexOf(norm(chk))>-1){
+      excluidos++;
+      continue;
+    }
+
     var dCell=getCell(ws,r,cols.dateCol);
     var d=dCell?parseDate(dCell.v):null;
     if(!d){ skip++; continue; }
@@ -625,7 +650,7 @@ function extractRecords(ws, range, cols){
       recs.push({norm:nomes[i], numero:numero, data:d, periodo:periodo, regiao:regiao});
     }
   }
-  return {recs:recs, skip:skip, comAud:comAud};
+  return {recs:recs, skip:skip, comAud:comAud, excluidos:excluidos};
 }
 
 function processWorkbook(data, nome, isCsv){
@@ -649,14 +674,28 @@ function processWorkbook(data, nome, isCsv){
   } else {
     console.log('✅ Coluna Data da Inspeção identificada: coluna '+XLSX.utils.encode_col(cols.dateCol));
   }
+  if(cols.checklistCol==null){
+    console.warn('❌ Coluna Checklist (P) não encontrada nos cabeçalhos. Aplicando fallback: coluna P (índice 15)...');
+    cols.checklistCol=15;
+  } else {
+    console.log('✅ Coluna Checklist identificada: coluna '+XLSX.utils.encode_col(cols.checklistCol));
+  }
 
   var res=extractRecords(ws,range,cols);
+
+  /* Logs de validação do filtro da coluna P (Checklist) */
+  var validosLinhas = res.comAud - res.excluidos - res.skip;
+  console.log('📋 Registros lidos: '+res.comAud);
+  console.log('📋 Registros excluídos (mutirão/parada de segurança - coluna P): '+res.excluidos);
+  console.log('📋 Registros válidos após o filtro: '+validosLinhas);
+  if(res.skip>0) console.log('ℹ️ Linhas ignoradas por data inválida: '+res.skip);
+
   if(!res.recs.length){
-    console.error('❌ Nenhum registro processado: '+res.comAud+' linha(s) com auditor, '+res.skip+' ignorada(s) por data inválida.');
-    alert('Nenhum registro de auditoria encontrado. Verifique as colunas Auditor e Data da Inspeção.');
+    console.error('❌ Nenhum registro processado: '+res.comAud+' linha(s) com auditor, '+res.excluidos+' excluída(s) pelo filtro, '+res.skip+' ignorada(s) por data inválida.');
+    alert('Nenhum registro de auditoria encontrado. Verifique as colunas Auditor, Data da Inspeção e Checklist.');
     return;
   }
-  console.log('✅ Quantidade de linhas processadas: '+res.recs.length+' participação(ões) de auditor ('+res.comAud+' linhas com auditor, '+res.skip+' ignoradas)');
+  console.log('✅ Quantidade de linhas processadas: '+res.recs.length+' participação(ões) de auditor ('+res.comAud+' linhas com auditor, '+res.excluidos+' excluídas pelo filtro, '+res.skip+' ignoradas)');
 
   S.records=res.recs; S.arquivo=nome; S.atualizado=new Date();
   S.filtros.mes = MES_ATUAL_LOAD || S.filtros.mes;
