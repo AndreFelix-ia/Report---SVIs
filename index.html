@@ -6,11 +6,6 @@
 <title>Painel DEOP · SVI Inspeções</title>
 
 <script>
-/* ============================================================
-   CARREGAMENTO DAS BIBLIOTECAS
-   Ordem: LOCAL primeiro (lib/) — sem dependência externa.
-   CDN apenas como contingência se o arquivo local faltar.
-   ============================================================ */
 window.__XLSX_OK = false;
 window.__HTML2CANVAS_OK = false;
 window.ESQUEMA = 'https' + '://';
@@ -169,9 +164,6 @@ main{max-width:1360px;margin:0 auto;padding:20px}
 .alerta.pend{background:var(--pend-bg);border-color:var(--pend);color:#92400E}
 .alerta.abx{background:var(--abx-bg);border-color:var(--abx);color:#991B1B}
 .alerta.fer{background:var(--fer-bg);border-color:var(--fer);color:#0369A1}
-.aviso{border-radius:12px;padding:11px 13px;border-left:5px solid var(--laranja);background:var(--laranja-tint);color:#9A3412;font-size:.78rem}
-.aviso .at{font-weight:800;text-transform:uppercase;letter-spacing:.3px;font-size:.75rem}
-.aviso .am{margin-top:3px;font-weight:500;line-height:1.45}
 .c-rodape{display:flex;justify-content:space-between;align-items:center;margin-top:auto;border-top:1px solid var(--linha);padding-top:10px;font-size:.72rem;color:var(--mut)}
 .vazio{color:var(--mut);text-align:center;padding:18px;font-size:.85rem}
 
@@ -203,8 +195,6 @@ main{max-width:1360px;margin:0 auto;padding:20px}
 .wa-pend.fer{color:#0369A1}
 .wa-pend-box{grid-column:1/-1}
 .wa-pair .bar{margin-top:8px}
-.wa-aviso{background:#FEF0E4;border:1.5px solid #F47920;border-radius:10px;padding:10px 13px;font-size:11px;color:#9A3412;line-height:1.5}
-.wa-aviso .at{font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 .wa-status{margin:0 28px 20px;border-radius:12px;padding:14px 18px;text-align:center}
 .wa-status.ok{background:#E7F6EC;border:2.5px solid #16A34A;color:#166534}
 .wa-status.pend{background:#FEF6E0;border:2.5px solid #D97706;color:#92400E}
@@ -217,7 +207,6 @@ main{max-width:1360px;margin:0 auto;padding:20px}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--azul-900);color:#fff;padding:10px 18px;border-radius:99px;font-size:.82rem;opacity:0;pointer-events:none;transition:.25s;z-index:80}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
-/* Rodapé discreto do painel */
 .rodape{position:fixed;bottom:10px;right:16px;font-size:.68rem;color:#94A3B8;letter-spacing:.4px;z-index:50;pointer-events:none;background:rgba(238,242,247,.75);padding:3px 9px;border-radius:6px;white-space:nowrap}
 
 @media print{
@@ -314,7 +303,7 @@ body.modo-sup .hero-status{min-width:320px}
       <div class="kpi a"><div class="lab">Gerente</div><div class="val" id="kGer">0</div><div class="sub">no filtro</div></div>
       <div class="kpi g"><div class="lab">🟢 Meta completa</div><div class="val" id="kGerOk">0</div><div class="sub">gerente</div></div>
       <div class="kpi b"><div class="lab">🔴 Abaixo da meta</div><div class="val" id="kGerAb">0</div><div class="sub">gerente</div></div>
-      <div class="kpi f"><div class="lab">🏖️ Em férias</div><div class="val" id="kFer">0</div><div class="sub">meta não considerada</div></div>
+      <div class="kpi f"><div class="lab">🏖️ Em férias totais</div><div class="val" id="kFer">0</div><div class="sub">afastados o período inteiro</div></div>
       <div class="kpi o"><div class="lab">Total de SVIs</div><div class="val" id="kSvi">0</div><div class="sub" id="kSviSub">no período</div></div>
       <div class="kpi a"><div class="lab">Cumprimento geral</div><div class="val" id="kGeral">0%</div><div class="bar"><i id="kGeralBar" style="width:0%" class="abx"></i></div></div>
     </div>
@@ -358,7 +347,9 @@ body.modo-sup .hero-status{min-width:320px}
 
 <script>
 /* ============================================================
-   CONFIG: edite aqui. Única parte que você mantém.
+   CONFIG: edite aqui somente a estrutura/equipe e as metas.
+   AS FÉRIAS NÃO FICAM MAIS AQUI — são lidas exclusivamente de
+   dados/configuracao.json (bloco "ferias").
    ============================================================ */
 var CONFIG = {
   configUrl: 'dados/configuracao.json',
@@ -367,15 +358,8 @@ var CONFIG = {
      o painel usa esta lista e não faz a varredura automática.
      Formato: "AAAA-MM". Ex.: ["2026-08","2026-07","2026-06"] */
 
-  /* Férias (FALLBACK apenas se dados/configuracao.json não carregar).
-     A fonte oficial é o arquivo dados/configuracao.json.
-     Nomes em MAIÚSCULA, valem para TODAS as categorias. */
-  ferias: [
-    'CARLOS HENRIQUE COSTA SANTOS',
-    'PAULO RICARDO DE SANTANA',
-    'JORGE AUGUSTO GUSMAO SANTOS',
-    'IKARO BATISTA DE ANDRADE SANTOS'
-  ],
+  /* Férias: SEMPRE vazio aqui. A fonte oficial é dados/configuracao.json. */
+  ferias: [],
 
   metas: {
     supervisor: {
@@ -397,7 +381,6 @@ var CONFIG = {
   },
 
   coordenadores: [
-    'Aliston Diego Barbosa da Silva',
     'Bernard de Sa Gouveia',
     'Fabiano Almeida Nascimento'
   ],
@@ -422,12 +405,11 @@ var CONFIG = {
 };
 /* ============================================================ */
 
+var MSG_FERIAS = 'Colaborador registrado em férias no período analisado.';
+
 var S = { records:[], arquivo:'', atualizado:null, filtros:{ regional:'', cargo:'todos', pessoa:'', mes:'', ini:'', fim:'', quinzena:'1', busca:'', periodo:'mensal' } };
 var SUP = [], TEC = [], COORD = [], GER = [], ultimoCardTexto = '', ultimaMsgRelatorio = '';
 var MESES_DISPONIVEIS = [], MES_ATUAL_LOAD = null;
-
-var AVISO_FERIAS_TXT = '⚠️ Atenção\nColaborador registrado em férias.\nO supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores.\nAo término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.';
-var AVISO_FERIAS_HTML = '<div class="aviso"><div class="at">⚠️ Atenção</div><div class="am">Colaborador registrado em férias. O supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div></div>';
 
 /* ---------- helpers ---------- */
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -435,7 +417,6 @@ function norm(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]
 function mesAtual(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
 function fmtData(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
 function icone(t){ return ({ok:'🟢',pend:'🟡',abx:'🔴',fer:'🏖️'}[t]||''); }
-function emFerias(normP){ return CONFIG.ferias.indexOf(normP) > -1; }
 function cargoLabel(c){ return ({supervisor:'Supervisor',tecnico:'Técnico',coordenador:'Coordenador',gerente:'Gerente'}[c]||c); }
 function ehRegional(c){ return c==='supervisor'||c==='tecnico'; }
 
@@ -486,18 +467,28 @@ async function carregarConfig(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     var cfg = await res.json();
     if(cfg && Array.isArray(cfg.ferias)){
-      var lista = cfg.ferias.map(function(n){ return norm(n); }).filter(Boolean);
-      if(lista.length){ CONFIG.ferias = lista; }
-      console.log('✅ Configuração carregada: '+lista.length+' colaborador(es) em férias (todas as categorias).');
+      var lista = [];
+      for(var i=0;i<cfg.ferias.length;i++){
+        var f = cfg.ferias[i];
+        if(!f || !f.nome) continue;
+        var ini = parseDate(f.inicio), fim = parseDate(f.fim);
+        if(!ini || !fim) continue;
+        ini.setHours(0,0,0,0); fim.setHours(0,0,0,0);
+        lista.push({ norm: norm(f.nome), iniT: ini.getTime(), fimT: fim.getTime() });
+      }
+      CONFIG.ferias = lista;
+      console.log('✅ Configuração carregada: '+lista.length+' período(s) de férias (fonte exclusiva: configuracao.json).');
     } else {
-      console.warn('⚠️ configuracao.json sem lista "ferias" válida. Usando fallback local.');
+      CONFIG.ferias = [];
+      console.warn('⚠️ configuracao.json sem bloco "ferias" válido. Nenhuma férias considerada.');
     }
     if(cfg && Array.isArray(cfg.meses) && cfg.meses.length){
       CONFIG.meses = cfg.meses.map(function(m){ return String(m); });
       console.log('📅 Meses declarados na configuração: '+CONFIG.meses.length);
     }
   }catch(err){
-    console.warn('⚠️ Não foi possível carregar '+CONFIG.configUrl+' ('+err.message+'). Usando fallback local.');
+    CONFIG.ferias = [];
+    console.warn('⚠️ Não foi possível carregar '+CONFIG.configUrl+' ('+err.message+'). Nenhuma férias considerada.');
   }
 }
 
@@ -521,7 +512,6 @@ async function descobrirMeses(){
   if(Array.isArray(CONFIG.meses) && CONFIG.meses.length){
     for(var i=0;i<CONFIG.meses.length;i++) candidatos.push(String(CONFIG.meses[i]));
   } else {
-    /* Varredura automática: tenta os últimos 24 meses a partir do atual */
     var d = new Date();
     for(var k=0;k<24;k++){
       candidatos.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
@@ -536,7 +526,7 @@ async function descobrirMeses(){
     if(await mesExiste(mes)) achados.push(mes);
   }
   achados.sort();
-  achados.reverse(); /* do mais recente para o mais antigo */
+  achados.reverse();
   MESES_DISPONIVEIS = achados;
   console.log('📅 Meses disponíveis: '+(achados.length?achados.join(', '):'nenhum'));
 }
@@ -624,8 +614,6 @@ function extractRecords(ws, range, cols){
     var aText=String(aCell.v).trim();
     if(!aText||aText==='0') continue;
     comAud++;
-
-    /* Filtro da coluna P (Checklist): exclui mutirões e paradas de segurança */
     var chk='';
     if(cols.checklistCol!=null){
       var chkCell=getCell(ws,r,cols.checklistCol);
@@ -635,7 +623,6 @@ function extractRecords(ws, range, cols){
       excluidos++;
       continue;
     }
-
     var dCell=getCell(ws,r,cols.dateCol);
     var d=dCell?parseDate(dCell.v):null;
     if(!d){ skip++; continue; }
@@ -660,7 +647,6 @@ function processWorkbook(data, nome, isCsv){
   var ws=wb.Sheets[sheetName];
   if(!ws||!ws['!ref']){ console.error('❌ Planilha vazia na aba "'+sheetName+'"'); toast('Aba vazia.'); return; }
   var range=XLSX.utils.decode_range(ws['!ref']);
-
   var cols=detectCols(ws,range);
   if(cols.audCol==null){
     console.warn('❌ Coluna Auditor não encontrada nos cabeçalhos. Aplicando fallback: coluna U (índice 20)...');
@@ -680,23 +666,18 @@ function processWorkbook(data, nome, isCsv){
   } else {
     console.log('✅ Coluna Checklist identificada: coluna '+XLSX.utils.encode_col(cols.checklistCol));
   }
-
   var res=extractRecords(ws,range,cols);
-
-  /* Logs de validação do filtro da coluna P (Checklist) */
   var validosLinhas = res.comAud - res.excluidos - res.skip;
   console.log('📋 Registros lidos: '+res.comAud);
   console.log('📋 Registros excluídos (mutirão/parada de segurança - coluna P): '+res.excluidos);
   console.log('📋 Registros válidos após o filtro: '+validosLinhas);
   if(res.skip>0) console.log('ℹ️ Linhas ignoradas por data inválida: '+res.skip);
-
   if(!res.recs.length){
     console.error('❌ Nenhum registro processado: '+res.comAud+' linha(s) com auditor, '+res.excluidos+' excluída(s) pelo filtro, '+res.skip+' ignorada(s) por data inválida.');
     alert('Nenhum registro de auditoria encontrado. Verifique as colunas Auditor, Data da Inspeção e Checklist.');
     return;
   }
   console.log('✅ Quantidade de linhas processadas: '+res.recs.length+' participação(ões) de auditor ('+res.comAud+' linhas com auditor, '+res.excluidos+' excluídas pelo filtro, '+res.skip+' ignoradas)');
-
   S.records=res.recs; S.arquivo=nome; S.atualizado=new Date();
   S.filtros.mes = MES_ATUAL_LOAD || S.filtros.mes;
   var selMes=document.getElementById('fMes');
@@ -743,7 +724,6 @@ function metaPara(cargo){
   return CONFIG.metas[cargo][S.filtros.periodo==='quinzena'?'quinzenal':'mensal'];
 }
 
-/* Apenas colaboradores cadastrados na estrutura oficial */
 function pessoas(){
   var out=[];
   for(var i=0;i<CONFIG.regionais.length;i++){
@@ -767,11 +747,54 @@ function groupStats(filtered){
   return g;
 }
 
-/* ---------- status: 🟢 · 🟡 · 🔴 · 🏖️ (vale para TODAS as categorias) ---------- */
-function calcStatus(stats, meta, feriasFlag){
-  if(feriasFlag){
+/* ---------- FÉRIAS: leitura do configuracao.json ---------- */
+function temRegistroFerias(normP){
+  for(var i=0;i<CONFIG.ferias.length;i++) if(CONFIG.ferias[i].norm===normP) return true;
+  return false;
+}
+
+/* Conta dias de férias do colaborador DENTRO da janela analisada.
+   Suporta períodos que cruzam anos e múltiplos períodos por nome. */
+function diasFeriasNoPeriodo(normP, ini, fim){
+  if(!CONFIG.ferias || !CONFIG.ferias.length || !ini || !fim) return 0;
+  var periodos = CONFIG.ferias.filter(function(f){ return f.norm===normP; });
+  if(!periodos.length) return 0;
+  var d = new Date(ini); d.setHours(0,0,0,0);
+  var fimT = new Date(fim); fimT.setHours(0,0,0,0);
+  var dias = 0;
+  while(d <= fimT){
+    var t = d.getTime();
+    for(var i=0;i<periodos.length;i++){
+      if(t>=periodos[i].iniT && t<=periodos[i].fimT){ dias++; break; }
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return dias;
+}
+
+/* Reduz a meta proporcionalmente aos dias de férias na janela analisada.
+   Piso: quem trabalhou pelo menos 1 dia nunca fica com meta total 0. */
+function metaProporcional(meta, diasFerias){
+  if(diasFerias<=0) return meta;
+  var b = windowBounds();
+  if(!b.ini || !b.fim) return meta;
+  var diasTotal = Math.round((b.fim.getTime()-b.ini.getTime())/86400000)+1;
+  if(diasTotal<=0) return meta;
+  var diasTrabalho = Math.max(0, diasTotal - diasFerias);
+  var fator = diasTotal>0 ? diasTrabalho/diasTotal : 0;
+  var m = {};
+  for(var k in meta){ m[k] = Math.max(0, Math.round(meta[k]*fator)); }
+  if(diasTrabalho>=1 && m.total===0) m.total = 1;
+  return m;
+}
+
+/* ---------- status: 🟢 · 🟡 · 🔴 · 🏖️ (férias totais só) ---------- */
+function calcStatus(stats, meta, diasFerias){
+  var b = windowBounds();
+  var diasTotais = (b.ini && b.fim) ? Math.round((b.fim.getTime()-b.ini.getTime())/86400000)+1 : 0;
+  if(diasFerias > 0 && (diasTotais === 0 || diasFerias >= diasTotais || meta.total === 0)){
     return { tipo:'fer', icone:'🏖️', label:'Em Férias', titulo:'EM FÉRIAS',
-      msg:'Colaborador em férias no período. Meta não considerada.',
+      msg:'Colaborador registrado em férias no período analisado.',
       pct:0, det:[], faltam:{total:0,diurno:0,noturno:0,madrugada:0} };
   }
   var pct = meta.total ? Math.min(100, Math.round(stats.total/meta.total*100)) : 0;
@@ -801,7 +824,7 @@ function rebuildPessoaSelect(){
     var p=ps[i];
     if(ehRegional(p.cargo)&&S.filtros.regional&&p.regional!==S.filtros.regional) continue;
     if(S.filtros.cargo!=='todos'&&p.cargo!==S.filtros.cargo) continue;
-    opts.push({v:p.norm,t:p.nome+' ('+cargoLabel(p.cargo)+(emFerias(p.norm)?' · 🏖️ Férias':'')+')'});
+    opts.push({v:p.norm,t:p.nome+' ('+cargoLabel(p.cargo)+(temRegistroFerias(p.norm)?' · 🏖️ Férias':'')+')'});
   }
   var sel=document.getElementById('fPessoa');
   if(!sel) return;
@@ -817,11 +840,11 @@ function metaDesc(cargo){
   var m=metaPara(cargo);
   if(cargo==='supervisor'){
     var per=S.filtros.periodo==='quinzena'?'quinzenal':'mensal';
-    return 'Meta '+per+': '+m.total+' SVI (🌞'+m.diurno+' diurnas, 🌙'+m.noturno+' noturnas'+(m.madrugada?', 🌃'+m.madrugada+' de madrugada':'')+')';
+    return 'Meta '+per+': '+m.total+' SVI (🌞'+m.diurno+' diurnas, 🌙'+m.noturno+' noturnas'+(m.madrugada?', 🌃'+m.madrugada+' de madrugada':'')+') · férias via configuracao.json';
   }
-  if(cargo==='coordenador') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)';
-  if(cargo==='gerente') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)';
-  return 'Meta mensal: '+m.total+' SVI (sem exigência de horário)'+(S.filtros.periodo==='quinzena'?' · técnicos mantêm meta mensal':'');
+  if(cargo==='coordenador') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário) · férias via configuracao.json';
+  if(cargo==='gerente') return 'Meta mensal: '+m.total+' SVI (sem exigência de horário) · férias via configuracao.json';
+  return 'Meta mensal: '+m.total+' SVI (sem exigência de horário) · férias via configuracao.json';
 }
 
 function renderAll(){
@@ -829,6 +852,7 @@ function renderAll(){
   rebuildPessoaSelect();
   var filtered=filteredRecords();
   var group=groupStats(filtered);
+  var b=windowBounds();
   var sup=[], tec=[], coord=[], ger=[];
   var ps=pessoas();
   for(var i=0;i<ps.length;i++){
@@ -837,16 +861,17 @@ function renderAll(){
     if(S.filtros.cargo!=='todos'&&p.cargo!==S.filtros.cargo) continue;
     if(S.filtros.pessoa&&p.norm!==S.filtros.pessoa) continue;
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=metaPara(p.cargo);
-    var st=calcStatus(stats,meta,emFerias(p.norm));
-    var row={nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:st};
+    var diasFer=diasFeriasNoPeriodo(p.norm,b.ini,b.fim);
+    var meta=metaProporcional(metaPara(p.cargo),diasFer);
+    var st=calcStatus(stats,meta,diasFer);
+    var row={nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:st,diasFerias:diasFer};
     if(p.cargo==='supervisor') sup.push(row);
     else if(p.cargo==='tecnico') tec.push(row);
     else if(p.cargo==='coordenador') coord.push(row);
     else ger.push(row);
   }
-  var b=S.filtros.busca?norm(S.filtros.busca):'';
-  function filtrar(arr){ return b?arr.filter(function(r){ return r.norm.indexOf(b)>-1||r.regional.toUpperCase().indexOf(b)>-1; }):arr; }
+  var bq=S.filtros.busca?norm(S.filtros.busca):'';
+  function filtrar(arr){ return bq?arr.filter(function(r){ return r.norm.indexOf(bq)>-1||r.regional.toUpperCase().indexOf(bq)>-1; }):arr; }
   SUP=filtrar(sup); TEC=filtrar(tec); COORD=filtrar(coord); GER=filtrar(ger);
   renderHero(group);
   renderKpis(SUP,TEC,COORD,GER,filtered);
@@ -861,17 +886,19 @@ function renderHero(group){
   var hero=document.getElementById('heroRegional');
   var reg=S.filtros.regional;
   if(!reg){ hero.style.display='none'; return; }
+  var b=windowBounds();
   var itens=pessoas().filter(function(p){ return p.regional===reg; }).map(function(p){
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=metaPara(p.cargo);
-    return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,emFerias(p.norm))};
+    var diasFer=diasFeriasNoPeriodo(p.norm,b.ini,b.fim);
+    var meta=metaProporcional(metaPara(p.cargo),diasFer);
+    return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,diasFer),diasFerias:diasFer};
   });
   var sup=null, tec=null;
   for(var i=0;i<itens.length;i++){ if(itens[i].cargo==='supervisor') sup=itens[i]; else tec=itens[i]; }
-  var ativos=itens.filter(function(p){ return p.st.tipo!=='fer'; });
   var real=0, alvo=0;
-  for(var j=0;j<ativos.length;j++){ real+=ativos[j].stats.total; alvo+=ativos[j].meta.total; }
+  for(var j=0;j<itens.length;j++){ real+=itens[j].stats.total; alvo+=itens[j].meta.total; }
   var pct=alvo?Math.min(100,Math.round(real/alvo*100)):0;
+  var ativos=itens.filter(function(p){ return p.st.tipo!=='fer'; });
   var tudoOk=ativos.length>0, algumPend=false, algumAbx=false;
   for(var k=0;k<ativos.length;k++){
     if(ativos[k].st.tipo!=='ok') tudoOk=false;
@@ -879,8 +906,8 @@ function renderHero(group){
     if(ativos[k].st.tipo==='abx') algumAbx=true;
   }
   var geral;
-  if(ativos.length===0){
-    geral={tipo:'fer',titulo:'TODOS EM FÉRIAS',msg:'Todos os colaboradores da regional estão em férias. Meta não considerada.',det:[]};
+  if(ativos.length===0 && itens.length>0){
+    geral={tipo:'fer',titulo:'TODOS EM FÉRIAS',msg:'Todos os colaboradores da regional estão em férias no período analisado.',det:[]};
   } else if(tudoOk) geral={tipo:'ok',titulo:'META COMPLETA',msg:'Meta atendida integralmente.',det:[]};
   else if(!algumAbx&&algumPend){
     var dets=[];
@@ -893,17 +920,14 @@ function renderHero(group){
   }
   function item(p){
     if(!p) return '<div class="hero-nome">Sem cadastro</div><div class="hero-line">Cargo não definido na regional</div><div class="hero-chip abx">⚠️ Não definido</div>';
-    return '<div class="hero-nome">'+esc(p.nome)+'</div><div class="hero-line">'+(p.st.tipo==='fer'?'Meta não considerada':p.stats.total+' / '+p.meta.total+' SVIs · '+p.st.pct+'%')+'</div><div class="hero-chip '+p.st.tipo+'">'+p.st.icone+' '+p.st.label+'</div>';
+    if(p.st.tipo==='fer') return '<div class="hero-nome">'+esc(p.nome)+'</div><div class="hero-line">🏖️ '+MSG_FERIAS+'</div><div class="hero-chip fer">🏖️ Em Férias</div>';
+    return '<div class="hero-nome">'+esc(p.nome)+'</div><div class="hero-line">'+p.stats.total+' / '+p.meta.total+' SVIs · '+p.st.pct+'%'+(p.diasFerias>0?' · 🏖️ '+p.diasFerias+'d férias':'')+'</div><div class="hero-chip '+p.st.tipo+'">'+p.st.icone+' '+p.st.label+'</div>';
   }
   var detHtml='';
   if(geral.det&&geral.det.length){ detHtml='<div class="hero-det">'; for(var w=0;w<geral.det.length;w++){ detHtml+='▸ '+geral.det[w]+'<br>'; } detHtml+='</div>'; }
   var notaFer='';
   if(itens.some(function(p){ return p.st.tipo==='fer'; })){
-    notaFer='<div class="hero-tot">🏖️ '+(itens.filter(function(p){ return p.st.tipo==='fer'; }).length)+' colaborador(es) em férias (meta não considerada)</div>';
-  }
-  var avisoFer='';
-  if(itens.some(function(p){ return p.st.tipo==='fer'; })){
-    avisoFer='<div style="margin-top:14px">'+AVISO_FERIAS_HTML+'</div>';
+    notaFer='<div class="hero-tot">🏖️ '+itens.filter(function(p){ return p.st.tipo==='fer'; }).length+' colaborador(es) afastado(s) o período inteiro</div>';
   }
   hero.innerHTML=
     '<div class="hero-top">'
@@ -914,9 +938,8 @@ function renderHero(group){
     +'<div class="hero-item"><div class="hero-lab">👔 Supervisor</div>'+item(sup)+'</div>'
     +'<div class="hero-item"><div class="hero-lab">🔧 Técnico</div>'+item(tec)+'</div>'
     +'<div class="hero-item hero-pct"><div class="hero-lab">🎯 Cumprimento da regional</div><div class="hero-big">'+pct+'%</div>'
-    +'<div class="bar"><i style="width:'+pct+'%" class="'+(ativos.length?geral.tipo:'fer')+'"></i></div><div class="hero-tot">'+real+' de '+alvo+' SVIs realizadas</div>'+notaFer+'</div>'
-    +'</div>'
-    +avisoFer;
+    +'<div class="bar"><i style="width:'+pct+'%" class="'+(alvo?geral.tipo:'fer')+'"></i></div><div class="hero-tot">'+real+' de '+alvo+' SVIs realizadas</div>'+notaFer+'</div>'
+    +'</div>';
   hero.style.display='block';
 }
 
@@ -932,7 +955,7 @@ function renderKpis(sup,tec,coord,ger,filtered){
   c('kSupOk').textContent=supAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
   c('kSupAb').textContent=supAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
   c('kTec').textContent=tecAtivos.length;
-  c('kTecSub').textContent=tecAtivos.length?('no filtro · 🏖️ '+ferias.length+' de férias'):'no filtro';
+  c('kTecSub').textContent=tec.length?('no filtro · 🏖️ '+tec.filter(function(r){ return r.st.tipo==='fer'; }).length+' afastados'):'no filtro';
   c('kTecOk').textContent=tecAtivos.filter(function(r){ return r.st.tipo==='ok'; }).length;
   c('kTecAb').textContent=tecAtivos.filter(function(r){ return r.st.tipo==='abx'; }).length;
   c('kCoord').textContent=coordAtivos.length;
@@ -947,8 +970,7 @@ function renderKpis(sup,tec,coord,ger,filtered){
   c('kSvi').textContent=Object.keys(unicos).length;
   c('kSviSub').textContent=filtered.length+' participações';
   var somaReal=0, somaMeta=0;
-  var ativosTodos=supAtivos.concat(tecAtivos,coordAtivos,gerAtivos);
-  for(var j=0;j<ativosTodos.length;j++){ somaReal+=ativosTodos[j].stats.total; somaMeta+=ativosTodos[j].meta.total; }
+  for(var j=0;j<todos.length;j++){ somaReal+=todos[j].stats.total; somaMeta+=todos[j].meta.total; }
   var geral=somaMeta?Math.round(somaReal/somaMeta*100):0;
   c('kGeral').textContent=geral+'%';
   c('kGeralBar').style.width=Math.min(100,geral)+'%';
@@ -976,30 +998,27 @@ function alerta(st){
 }
 
 function mini(label,val,metaV){
-  if(!metaV){
-    return '<div class="mini"><span>'+label+'</span><b>'+val+'</b></div>';
-  }
+  if(!metaV){ return '<div class="mini"><span>'+label+'</span><b>'+val+'</b></div>'; }
   var w=Math.min(100,Math.round(val/metaV*100));
   var cls=val>=metaV?'g':(w>0?'y':'r');
   var barCls=val>=metaV?'ok':(w>0?'pend':'abx');
   return '<div class="mini"><span>'+label+'</span><b class="'+cls+'">'+val+'/'+metaV+'</b><div class="bar sm"><i style="width:'+w+'%" class="'+barCls+'"></i></div></div>';
 }
 
+/* Card de férias totais: exibe somente a mensagem padrão. */
 function cardFeriasBase(r,i,cargo){
   return '<div class="card fer">'
     +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip fer">🏖️ Em Férias</span></div>'
-    +alerta(r.st)
-    +AVISO_FERIAS_HTML
+    +'<div class="alerta fer"><div class="at">🏖️ EM FÉRIAS</div><div class="am">'+MSG_FERIAS+'</div></div>'
     +'<div class="c-rodape"><span>Última: '+(r.stats.ultima?fmtData(r.stats.ultima):'nenhuma')+'</span><span class="no-print"><button class="btn btn-azul" onclick="abrirRelatorio('+i+',\''+cargo+'\')">📋 Relatório</button></span></div>'
     +'</div>';
 }
 
-/* Card do Supervisor: exibe turnos (meta por horário) */
 function cardSupervisor(r,i){
   var st=r.st, s=r.stats, m=r.meta;
   if(st.tipo==='fer') return cardFeriasBase(r,i,'sup');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP'+(r.diasFerias>0?' · 🏖️ '+r.diasFerias+'d férias':'')+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
     +'<div class="minis">'+mini('🌞 Diurno',s.diurno,m.diurno)+mini('🌙 Noturno',s.noturno,m.noturno)+mini('🌃 Madrugada',s.madrugada,m.madrugada)+'</div>'
@@ -1008,12 +1027,11 @@ function cardSupervisor(r,i){
     +'</div>';
 }
 
-/* Card do Técnico: sem turnos */
 function cardTecnico(r,i){
   var st=r.st, s=r.stats, m=r.meta;
   if(st.tipo==='fer') return cardFeriasBase(r,i,'tec');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP'+(r.diasFerias>0?' · 🏖️ '+r.diasFerias+'d férias':'')+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
     +alerta(st)
@@ -1021,12 +1039,11 @@ function cardTecnico(r,i){
     +'</div>';
 }
 
-/* Card do Coordenador: meta 4, sem turnos */
 function cardCoordenador(r,i){
   var st=r.st, s=r.stats, m=r.meta;
   if(st.tipo==='fer') return cardFeriasBase(r,i,'coord');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP'+(r.diasFerias>0?' · 🏖️ '+r.diasFerias+'d férias':'')+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
     +alerta(st)
@@ -1034,12 +1051,11 @@ function cardCoordenador(r,i){
     +'</div>';
 }
 
-/* Card do Gerente: meta 2, sem turnos */
 function cardGerente(r,i){
   var st=r.st, s=r.stats, m=r.meta;
   if(st.tipo==='fer') return cardFeriasBase(r,i,'ger');
   return '<div class="card">'
-    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
+    +'<div class="c-top"><div><div class="nome">'+esc(r.nome)+'</div><div class="reg">📍 '+esc(r.regional)+' · DEOP'+(r.diasFerias>0?' · 🏖️ '+r.diasFerias+'d férias':'')+'</div></div><span class="chip '+st.tipo+'">'+st.icone+' '+st.label+'</span></div>'
     +'<div class="c-total"><span>Total: <b>'+s.total+'/'+m.total+'</b></span><span class="pct">'+st.pct+'%</span></div>'
     +'<div class="bar"><i style="width:'+st.pct+'%" class="'+st.tipo+'"></i></div>'
     +alerta(st)
@@ -1063,9 +1079,7 @@ function textoRelatorio(row){
     L.push('Regional: '+row.regional);
     L.push('Período: '+periodoTexto());
     L.push('Status: Em Férias.');
-    L.push('Colaborador em férias no período. Meta não considerada.');
-    L.push('');
-    L.push(AVISO_FERIAS_TXT);
+    L.push(MSG_FERIAS);
     return L.join('\n');
   }
   var isSup=row.cargo==='supervisor';
@@ -1073,6 +1087,7 @@ function textoRelatorio(row){
   L.push('✅ SVI DEOP - '+cargoLabel(row.cargo)+' '+row.nome);
   L.push('Regional: '+row.regional);
   L.push('Período: '+periodoTexto());
+  if(row.diasFerias>0) L.push('🏖️ Dias de férias no período: '+row.diasFerias+' · Meta proporcional: '+m.total);
   if(isSup){
     L.push('Meta '+(S.filtros.periodo==='quinzena'?'quinzenal':'mensal')+': '+m.total);
     L.push('Realizadas: '+s.total);
@@ -1150,17 +1165,19 @@ function gerarCard(autoExport){
   if(!S.filtros.regional){ toast('Selecione uma regional no filtro para gerar o card.'); return; }
   var reg=S.filtros.regional;
   var group=groupStats(filteredRecords());
+  var b=windowBounds();
   var itens=pessoas().filter(function(p){ return p.regional===reg; }).map(function(p){
     var stats=group[p.norm]||{total:0,diurno:0,noturno:0,madrugada:0,ultima:null};
-    var meta=metaPara(p.cargo);
-    return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,emFerias(p.norm))};
+    var diasFer=diasFeriasNoPeriodo(p.norm,b.ini,b.fim);
+    var meta=metaProporcional(metaPara(p.cargo),diasFer);
+    return {nome:p.nome,norm:p.norm,cargo:p.cargo,regional:p.regional,stats:stats,meta:meta,st:calcStatus(stats,meta,diasFer),diasFerias:diasFer};
   });
   var sup=null, tec=null;
   for(var i=0;i<itens.length;i++){ if(itens[i].cargo==='supervisor') sup=itens[i]; else tec=itens[i]; }
-  var ativos=itens.filter(function(p){ return p.st.tipo!=='fer'; });
   var real=0, alvo=0;
-  for(var j=0;j<ativos.length;j++){ real+=ativos[j].stats.total; alvo+=ativos[j].meta.total; }
+  for(var j=0;j<itens.length;j++){ real+=itens[j].stats.total; alvo+=itens[j].meta.total; }
   var pct=alvo?Math.min(100,Math.round(real/alvo*100)):0;
+  var ativos=itens.filter(function(p){ return p.st.tipo!=='fer'; });
   var tudoOk=ativos.length>0, algumPend=false, algumAbx=false;
   for(var k=0;k<ativos.length;k++){
     if(ativos[k].st.tipo!=='ok') tudoOk=false;
@@ -1168,7 +1185,7 @@ function gerarCard(autoExport){
     if(ativos[k].st.tipo==='abx') algumAbx=true;
   }
   var geral;
-  if(ativos.length===0) geral={tipo:'fer',titulo:'TODOS EM FÉRIAS',msg:'Todos os colaboradores da regional estão em férias. Meta não considerada.',det:[]};
+  if(ativos.length===0) geral={tipo:'fer',titulo:'TODOS EM FÉRIAS',msg:'Todos os colaboradores da regional estão em férias no período analisado.',det:[]};
   else if(tudoOk) geral={tipo:'ok',titulo:'META COMPLETA',msg:'Meta atendida integralmente.',det:[]};
   else if(!algumAbx&&algumPend){
     var dets=[];
@@ -1182,9 +1199,8 @@ function gerarCard(autoExport){
   var pendLinhas=[];
   for(var pI=0;pI<itens.length;pI++){
     var pIt=itens[pI];
-    if(pIt.st.tipo==='fer'){
-      pendLinhas.push('<div class="wa-pend fer"><b>'+(pIt.cargo==='supervisor'?'👔 Sup. ':'🔧 Téc. ')+esc(pIt.nome)+'</b>: 🏖️ em férias (meta não considerada)</div>');
-    } else if(pIt.st.tipo==='abx'){
+    if(pIt.st.tipo==='fer') continue;
+    if(pIt.st.tipo==='abx'){
       var partes=[];
       if(pIt.st.faltam.diurno) partes.push('🌞 '+pIt.st.faltam.diurno+' diurna');
       if(pIt.st.faltam.noturno) partes.push('🌙 '+pIt.st.faltam.noturno+' noturna');
@@ -1198,17 +1214,10 @@ function gerarCard(autoExport){
   var pendHtml=pendLinhas.length?pendLinhas.join(''):'<div class="wa-pend ok">✅ Sem pendências.</div>';
   var detCard='';
   if(geral.det&&geral.det.length){ detCard='<div class="wa-det">'+geral.det.join(' ')+'</div>'; }
-  var avisoCard='';
-  if(itens.some(function(p){ return p.st.tipo==='fer'; })){
-    avisoCard='<div class="wa-aviso"><div class="at">⚠️ Atenção</div>Colaborador registrado em férias. O supervisor deve manter a informação de férias atualizada para garantir que a exclusão da meta permaneça correta nos indicadores. Ao término das férias, o colaborador deve ser removido da lista em dados/configuracao.json para que suas metas voltem a ser contabilizadas normalmente.</div>';
-  }
-
-  /* Turnos: apenas para o Supervisor (meta por horário) */
   var supTurnos='';
   if(sup && sup.st.tipo!=='fer'){
     supTurnos='<div class="wa-mini">🌞 Diurno: '+sup.stats.diurno+'/'+sup.meta.diurno+' · 🌙 Noturno: '+sup.stats.noturno+'/'+sup.meta.noturno+' · 🌃 Madrugada: '+sup.stats.madrugada+'/'+sup.meta.madrugada+'</div>';
   }
-
   document.getElementById('waCardReg').textContent=reg;
   document.getElementById('waCard').innerHTML=
     '<div class="wa-top">'
@@ -1218,27 +1227,26 @@ function gerarCard(autoExport){
     +'<div class="wa-body">'
     +'<div class="wa-region">📍 '+esc(reg)+' · DEOP</div>'
     +'<div class="wa-grid2">'
-    +'<div class="wa-pair"><div class="wa-k">👔 Supervisor</div><div class="wa-v">'+(sup?esc(sup.nome):'Não definido')+'</div><div class="wa-mini">'+(sup?(sup.st.tipo==='fer'?'🏖️ em férias':sup.stats.total+' / '+sup.meta.total+' SVI · '+sup.st.pct+'%'):'—')+'</div>'+supTurnos+'</div>'
-    +'<div class="wa-pair"><div class="wa-k">🔧 Técnico</div><div class="wa-v">'+(tec?esc(tec.nome):'Não definido')+'</div><div class="wa-mini">'+(tec?(tec.st.tipo==='fer'?'🏖️ em férias':tec.stats.total+' / '+tec.meta.total+' SVI · '+tec.st.pct+'%'):'—')+'</div></div>'
+    +'<div class="wa-pair"><div class="wa-k">👔 Supervisor</div><div class="wa-v">'+(sup?esc(sup.nome):'Não definido')+'</div><div class="wa-mini">'+(sup?(sup.st.tipo==='fer'?'🏖️ '+MSG_FERIAS:sup.stats.total+' / '+sup.meta.total+' SVI · '+sup.st.pct+'%'+(sup.diasFerias>0?' · 🏖️ '+sup.diasFerias+'d férias':'')):'—')+'</div>'+supTurnos+'</div>'
+    +'<div class="wa-pair"><div class="wa-k">🔧 Técnico</div><div class="wa-v">'+(tec?esc(tec.nome):'Não definido')+'</div><div class="wa-mini">'+(tec?(tec.st.tipo==='fer'?'🏖️ '+MSG_FERIAS:tec.stats.total+' / '+tec.meta.total+' SVI · '+tec.st.pct+'%'+(tec.diasFerias>0?' · 🏖️ '+tec.diasFerias+'d férias':'')):'—')+'</div></div>'
     +'<div class="wa-pair"><div class="wa-k">🎯 Meta</div><div class="wa-v az">'+alvo+' SVIs</div></div>'
     +'<div class="wa-pair"><div class="wa-k">✅ Realizado</div><div class="wa-v az">'+real+' SVIs</div></div>'
     +'<div class="wa-pair wa-pend-box"><div class="wa-k">🚨 Pendências</div>'+pendHtml+'</div>'
-    +'<div class="wa-pair wa-pend-box"><div class="wa-k">📈 Percentual</div><div class="wa-v az">'+pct+'%</div><div class="bar"><i style="width:'+pct+'%" class="'+(ativos.length?geral.tipo:'fer')+'"></i></div></div>'
+    +'<div class="wa-pair wa-pend-box"><div class="wa-k">📈 Percentual</div><div class="wa-v az">'+pct+'%</div><div class="bar"><i style="width:'+pct+'%" class="'+(alvo?geral.tipo:'fer')+'"></i></div></div>'
     +'</div>'
-    +avisoCard
     +'</div>'
     +'<div class="wa-status '+geral.tipo+'"><div class="wa-big">'+icone(geral.tipo)+' '+geral.titulo+'</div><div class="wa-msg">'+geral.msg+'</div>'+detCard+'</div>'
     +'<div class="wa-foot">DEOP | Energisa Sergipe | Elaborado por André Felix · Período: '+periodoTexto()+'</div>';
 
   var L=[];
   L.push('📊 SVI DEOP - '+reg);
-  L.push('👔 Supervisor: '+(sup?(sup.st.tipo==='fer'?sup.nome+' (🏖️ em férias)':sup.nome+' ('+sup.stats.total+'/'+sup.meta.total+' SVI, '+sup.st.pct+'%)'):'Não definido'));
+  L.push('👔 Supervisor: '+(sup?(sup.st.tipo==='fer'?sup.nome+' (🏖️ '+MSG_FERIAS+')':sup.nome+' ('+sup.stats.total+'/'+sup.meta.total+' SVI, '+sup.st.pct+'%)'):'Não definido'));
   if(sup && sup.st.tipo!=='fer'){
     L.push('🌞 Diurno: '+sup.stats.diurno+'/'+sup.meta.diurno);
     L.push('🌙 Noturno: '+sup.stats.noturno+'/'+sup.meta.noturno);
     L.push('🌃 Madrugada: '+sup.stats.madrugada+'/'+sup.meta.madrugada);
   }
-  L.push('🔧 Técnico: '+(tec?(tec.st.tipo==='fer'?tec.nome+' (🏖️ em férias)':tec.nome+' ('+tec.stats.total+'/'+tec.meta.total+' SVI, '+tec.st.pct+'%)'):'Não definido'));
+  L.push('🔧 Técnico: '+(tec?(tec.st.tipo==='fer'?tec.nome+' (🏖️ '+MSG_FERIAS+')':tec.nome+' ('+tec.stats.total+'/'+tec.meta.total+' SVI, '+tec.st.pct+'%)'):'Não definido'));
   L.push('🎯 Meta: '+alvo+' SVIs');
   L.push('✅ Realizado: '+real+' SVIs');
   L.push('📈 Percentual: '+pct+'%');
@@ -1253,10 +1261,6 @@ function gerarCard(autoExport){
   }
   L.push('Status: '+icone(geral.tipo)+' '+geral.titulo+'.');
   L.push('Período: '+periodoTexto());
-  if(itens.some(function(p){ return p.st.tipo==='fer'; })){
-    L.push('');
-    L.push(AVISO_FERIAS_TXT);
-  }
   L.push('DEOP | Energisa Sergipe | Elaborado por André Felix');
   ultimoCardTexto=L.join('\n');
 
@@ -1352,7 +1356,6 @@ function bindFilters(){
   } else {
     console.warn('⚠️ fRegional não encontrado no HTML.');
   }
-
   var mapa={ regional:'fRegional', cargo:'fCargo', pessoa:'fPessoa', mes:'fMes', ini:'fIni', fim:'fFim', quinzena:'fQuinzena', busca:'fBusca' };
   for(var k in mapa){
     (function(chave){
@@ -1365,13 +1368,11 @@ function bindFilters(){
           var pSel=document.getElementById('fPessoa');
           if(pSel) pSel.value='';
         }
-        /* Trocar de mês = carregar o arquivo mensal correspondente */
         if(chave==='mes'){ if(el.value) carregarMes(el.value); return; }
         renderAll();
       });
     })(k);
   }
-
   var radios=document.querySelectorAll('input[name="periodo"]');
   for(var i2=0;i2<radios.length;i2++){
     radios[i2].addEventListener('change',function(){
@@ -1381,7 +1382,6 @@ function bindFilters(){
       renderAll();
     });
   }
-
   var btnLimpar=document.getElementById('btnLimpar');
   if(btnLimpar){
     btnLimpar.addEventListener('click',function(){
@@ -1400,7 +1400,6 @@ function bindFilters(){
       renderAll();
     });
   }
-
   var modal=document.getElementById('modal');
   if(modal){
     modal.addEventListener('click',function(e){ if(e.target.id==='modal') fecharModal(); });
@@ -1426,7 +1425,6 @@ async function init(){
   } else {
     console.error('❌ fileInput não encontrado no HTML.');
   }
-  /* 1º configuração (férias + meses opcionais), 2º descoberta dos meses, 3º carrega o mês padrão */
   await carregarConfig();
   await descobrirMeses();
   preencherSelectMeses();
