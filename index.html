@@ -640,11 +640,22 @@ function diasFeriasNoPeriodo(normP,ini,fim){
 }
 function metaProporcional(meta,diasFerias){
   if(diasFerias<=0) return meta;
-  var b=windowBounds(); if(!b.ini||!b.fim) return meta;
-  var diasTotal=Math.round((b.fim.getTime()-b.ini.getTime())/86400000)+1; if(diasTotal<=0) return meta;
-  var diasTrabalho=Math.max(0,diasTotal-diasFerias); var fator=diasTotal>0?diasTrabalho/diasTotal:0;
-  var m={}; for(var k in meta){ m[k]=Math.max(0,Math.round(meta[k]*fator)); }
-  // removido para permitir meta zero quando a proporcionalidade resultar em 0
+
+  var b=windowBounds();
+  if(!b.ini||!b.fim) return meta;
+
+  var diasTotal=Math.round((b.fim.getTime()-b.ini.getTime())/86400000)+1;
+  if(diasTotal<=0) return meta;
+
+  var diasTrabalho=Math.max(0,diasTotal-diasFerias);
+  var fator=diasTotal>0 ? diasTrabalho/diasTotal : 0;
+
+  var m={};
+
+  for(var k in meta){
+    m[k]=Math.max(0,Math.floor(meta[k]*fator));
+  }
+
   return m;
 }
 function calcStatus(stats,meta,diasFerias){
