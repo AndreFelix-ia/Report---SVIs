@@ -1108,7 +1108,17 @@ async function exportarWaPNG(){
   if(typeof html2canvas==='undefined'){ toast('Biblioteca de imagem não disponível. Use captura de tela.'); return; }
   var card=document.getElementById('waCard');
   try{
-    var canvas=await html2canvas(card,{backgroundColor:'#FFFFFF',scale:2,useCORS:true,logging:false});
+    var canvas = await html2canvas(card,{
+    backgroundColor:'#FFFFFF',
+    scale:2,
+    useCORS:true,
+    logging:false,
+    allowTaint:true,
+    scrollX:0,
+    scrollY:0,
+    windowWidth: card.scrollWidth,
+    windowHeight: card.scrollHeight
+});
     var link=document.createElement('a');
     link.download='SVI-DEOP-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
     link.href=canvas.toDataURL('image/png');
