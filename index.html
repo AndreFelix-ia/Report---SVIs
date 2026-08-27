@@ -204,9 +204,24 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px}
 #relTexto{width:100%;min-height:240px;border:1px solid var(--linha);border-radius:12px;padding:12px;font-family:inherit;font-size:.83rem;background:#F7FAFC;white-space:pre-wrap;resize:vertical}
 .mbtns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
 .x{background:none;border:0;font-size:1.4rem;cursor:pointer;color:var(--mut)}
-.wa-wrap{overflow:auto;max-height:70vh;display:flex;justify-content:center;padding:10px 0}
+.wa-wrap{
+  overflow:visible;
+  max-height:none;
+  display:flex;
+  justify-content:center;
+  padding:10px 0
+}
 
-#waCard{width:580px;min-height:680px;background:#fff;display:flex;flex-direction:column;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;border-radius:20px;box-shadow:0 24px 60px rgba(0,58,112,.25)}
+#waCard{
+  width:580px;
+  min-height:680px;
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  overflow:visible;
+  border-radius:20px;
+  box-shadow:0 24px 60px rgba(0,58,112,.25)
+}
 .wa-top{background:linear-gradient(135deg,#003A70 0%,#005CA9 40%,#00A7CE 70%,#8BC53F 100%);color:#fff;padding:22px 30px;display:flex;align-items:center;gap:14px}
 .wa-top img{
   height:38px;
@@ -400,7 +415,7 @@ var CONFIG = {
   ferias: [],
   metas: {
     supervisor: { mensal:{total:8,diurno:4,noturno:3,madrugada:1}, quinzenal:{total:4,diurno:2,noturno:2,madrugada:0} },
-    tecnico: { mensal:{total:6,diurno:0,noturno:0,madrugada:0}, quinzenal:{total:6,diurno:0,noturno:0,madrugada:0} },
+    tecnico: { mensal:{total:6,diurno:0,noturno:0,madrugada:0}, quinzenal:{total:3,diurno:0,noturno:0,madrugada:0} },
     coordenador: { mensal:{total:4,diurno:0,noturno:0,madrugada:0}, quinzenal:{total:4,diurno:0,noturno:0,madrugada:0} },
     gerente: { mensal:{total:2,diurno:0,noturno:0,madrugada:0}, quinzenal:{total:2,diurno:0,noturno:0,madrugada:0} }
   },
@@ -629,7 +644,7 @@ function metaProporcional(meta,diasFerias){
   var diasTotal=Math.round((b.fim.getTime()-b.ini.getTime())/86400000)+1; if(diasTotal<=0) return meta;
   var diasTrabalho=Math.max(0,diasTotal-diasFerias); var fator=diasTotal>0?diasTrabalho/diasTotal:0;
   var m={}; for(var k in meta){ m[k]=Math.max(0,Math.round(meta[k]*fator)); }
-  if(diasTrabalho>=1&&m.total===0) m.total=1;
+  // removido para permitir meta zero quando a proporcionalidade resultar em 0
   return m;
 }
 function calcStatus(stats,meta,diasFerias){
@@ -1106,7 +1121,9 @@ function enviarWhatsAppCard(){ if(!ultimoCardTexto){ toast('Gere o card primeiro
 function fecharWaModal(){ document.getElementById('waModal').classList.remove('aberto'); }
 async function exportarWaPNG(){
   if(typeof html2canvas==='undefined'){ toast('Biblioteca de imagem não disponível. Use captura de tela.'); return; }
-  var card=document.getElementById('waCard');
+  card.style.height='auto';
+card.style.maxHeight='none';
+card.style.overflow='visible';
   try{
     var canvas = await html2canvas(card,{
     backgroundColor:'#FFFFFF',
@@ -1116,6 +1133,8 @@ async function exportarWaPNG(){
     allowTaint:true,
     scrollX:0,
     scrollY:0,
+    width: card.scrollWidth,
+    height: card.scrollHeight,
     windowWidth: card.scrollWidth,
     windowHeight: card.scrollHeight
 });
