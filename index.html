@@ -214,7 +214,6 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px}
 
 #waCard{
   width:580px;
-  min-height:680px;
   background:#fff;
   display:flex;
   flex-direction:column;
@@ -232,7 +231,13 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px}
 }
 .wa-title{font-size:22px;font-weight:800;letter-spacing:.3px}
 .wa-sub{font-size:12px;opacity:.92}
-.wa-body{flex:1;padding:22px 30px;display:flex;flex-direction:column;gap:13px}
+.wa-body{
+  flex:none;
+  padding:22px 30px;
+  display:flex;
+  flex-direction:column;
+  gap:13px
+}
 .wa-region{font-size:25px;font-weight:800;color:#003A70;border-bottom:3px solid #F47920;padding-bottom:9px}
 .wa-grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .wa-pair{background:#F4F7FB;border:1.5px solid #E2E8F0;border-radius:12px;padding:10px 13px}
@@ -257,7 +262,16 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px}
 .wa-big{font-size:21px;font-weight:800}
 .wa-msg{font-size:13px;margin-top:5px;font-weight:600;opacity:.95}
 .wa-det{font-size:12px;margin-top:6px;font-weight:700}
-.wa-foot{background:#F4F7FB;border-top:1.5px solid #E2E8F0;padding:12px 30px;font-size:11px;color:#64748B;text-align:center;letter-spacing:.3px}
+.wa-foot{
+  background:#F4F7FB;
+  border-top:1.5px solid #E2E8F0;
+  padding:12px 30px;
+  font-size:11px;
+  color:#64748B;
+  text-align:center;
+  letter-spacing:.3px;
+  white-space:nowrap;
+}
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--azul-900);color:#fff;padding:11px 20px;border-radius:999px;font-size:.82rem;opacity:0;pointer-events:none;transition:.25s;z-index:80}
 #toast.show{opacity:1;transform:translateX(-50%)}
 
@@ -1147,18 +1161,13 @@ async function exportarWaPNG(){
   card.style.maxHeight = 'none';
   card.style.overflow = 'visible';
   try{
-    var canvas = await html2canvas(card,{
+    .wa-foot
     backgroundColor:'#FFFFFF',
-    scale:2,
+    scale:3,
     useCORS:true,
     logging:false,
-    allowTaint:true,
     scrollX:0,
-    scrollY:0,
-    width: card.scrollWidth,
-    height: card.scrollHeight,
-    windowWidth: card.scrollWidth,
-    windowHeight: card.scrollHeight
+    scrollY:0
 });
     var link=document.createElement('a');
     link.download='SVI-DEOP-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
