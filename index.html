@@ -1146,24 +1146,11 @@ function compartilharPessoa(normP){
 }
 
 function enviarWhatsAppCard(){ if(!ultimoCardTexto){ toast('Gere o card primeiro.'); return; } window.open(ESQUEMA+'wa.me/?text='+encodeURIComponent(ultimoCardTexto),'_blank'); }
-function fecharWaModal(){ document.getElementById('waModal').classList.remove('aberto'); }
+function fecharWaModal(){
+  document.getElementById('waModal').classList.remove('aberto');
+}
+
 async function exportarWaPNG(){
-    if(typeof html2canvas==='undefined'){
-    toast('Biblioteca de imagem não disponível. Use captura de tela.');
-    return;
-  }
-
-  const card = document.getElementById('waCard');
-
-  if(!card){
-    toast('Card não encontrado.');
-    return;
-  }
-
-  card.style.height = 'auto';
-  card.style.maxHeight = 'none';
-  card.style.overflow = 'visible';
-  async function exportarWaPNG(){
 
   if(typeof html2canvas === 'undefined'){
     toast('Biblioteca de imagem não disponível.');
@@ -1199,26 +1186,18 @@ async function exportarWaPNG(){
       + '.png';
 
     link.href = canvas.toDataURL('image/png');
-
     link.click();
 
     toast('Imagem exportada! ✅');
 
   }catch(e){
 
-    console.error('Erro PNG:',e);
-
+    console.error('Erro PNG:', e);
     toast('Falha ao exportar.');
 
   }
 }
-    var link=document.createElement('a');
-    link.download='SVI-DEOP-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
-    link.href=canvas.toDataURL('image/png');
-    link.click();
-    toast('Imagem exportada! ✅');
-  }catch(e){ console.error('❌ Erro na exportação PNG:',e); toast('Falha ao exportar. Use captura de tela.'); }
-}
+
 function copiarCardTexto(){
   var msg=ultimoCardTexto;
   if(!msg){ toast('Gere o card primeiro.'); return; }
