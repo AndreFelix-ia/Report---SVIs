@@ -1131,10 +1131,21 @@ function compartilharPessoa(normP){
 function enviarWhatsAppCard(){ if(!ultimoCardTexto){ toast('Gere o card primeiro.'); return; } window.open(ESQUEMA+'wa.me/?text='+encodeURIComponent(ultimoCardTexto),'_blank'); }
 function fecharWaModal(){ document.getElementById('waModal').classList.remove('aberto'); }
 async function exportarWaPNG(){
-  if(typeof html2canvas==='undefined'){ toast('Biblioteca de imagem não disponível. Use captura de tela.'); return; }
-  card.style.height='auto';
-card.style.maxHeight='none';
-card.style.overflow='visible';
+    if(typeof html2canvas==='undefined'){
+    toast('Biblioteca de imagem não disponível. Use captura de tela.');
+    return;
+  }
+
+  const card = document.getElementById('waCard');
+
+  if(!card){
+    toast('Card não encontrado.');
+    return;
+  }
+
+  card.style.height = 'auto';
+  card.style.maxHeight = 'none';
+  card.style.overflow = 'visible';
   try{
     var canvas = await html2canvas(card,{
     backgroundColor:'#FFFFFF',
