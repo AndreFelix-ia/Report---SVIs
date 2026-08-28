@@ -225,9 +225,12 @@ main{max-width:1400px;margin:0 auto;padding:20px 24px}
 .wa-top img{
   height:38px;
   width:auto;
-  background:transparent;
-  border-radius:0;
-  padding:0;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:0 !important;
+  display:block;
 }
 .wa-title{font-size:22px;font-weight:800;letter-spacing:.3px}
 .wa-sub{font-size:12px;opacity:.92}
@@ -1160,15 +1163,55 @@ async function exportarWaPNG(){
   card.style.height = 'auto';
   card.style.maxHeight = 'none';
   card.style.overflow = 'visible';
+  async function exportarWaPNG(){
+
+  if(typeof html2canvas === 'undefined'){
+    toast('Biblioteca de imagem não disponível.');
+    return;
+  }
+
+  const card = document.getElementById('waCard');
+
+  if(!card){
+    toast('Card não encontrado.');
+    return;
+  }
+
   try{
-    .wa-foot
-    backgroundColor:'#FFFFFF',
-    scale:3,
-    useCORS:true,
-    logging:false,
-    scrollX:0,
-    scrollY:0
-});
+
+    const canvas = await html2canvas(card,{
+      backgroundColor:null,
+      scale:3,
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      scrollX:0,
+      scrollY:0
+    });
+
+    const link = document.createElement('a');
+
+    link.download =
+      'SVI-DEOP-' +
+      (S.filtros.regional
+        ? S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-')
+        : 'geral')
+      + '.png';
+
+    link.href = canvas.toDataURL('image/png');
+
+    link.click();
+
+    toast('Imagem exportada! ✅');
+
+  }catch(e){
+
+    console.error('Erro PNG:',e);
+
+    toast('Falha ao exportar.');
+
+  }
+}
     var link=document.createElement('a');
     link.download='SVI-DEOP-'+(S.filtros.regional?S.filtros.regional.replace(/[^a-zA-Z0-9]/g,'-'):'geral')+'.png';
     link.href=canvas.toDataURL('image/png');
